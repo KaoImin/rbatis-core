@@ -91,7 +91,7 @@ impl<'r> JsonCodec for sqlx_core::mysql::MySqlValueRef<'r> {
                 return Ok(json!(r));
             }
             "TIMESTAMP" => {
-                let r: Option<DateTime<Utc>> = Decode::<'_, MySql>::decode(self)?;
+                let r: Option<chrono::NaiveDateTime> = Decode::<'_, MySql>::decode(self)?;
                 return Ok(json!(r));
             }
 
