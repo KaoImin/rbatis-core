@@ -129,35 +129,35 @@ impl<'c> JsonCodec for PgValueRef<'c> {
                 return Ok(json!(r));
             }
             "TIME" => {
-                let r: Option<String> = Decode::<'_, Postgres>::decode(self)?;
+                let r: Option<Time> = Decode::<'_, Postgres>::decode(self)?;
                 return Ok(json!(r));
             }
             "TIME[]" => {
-                let r: Option<Vec<String>> = Decode::<'_, Postgres>::decode(self)?;
+                let r: Option<Vec<Time>> = Decode::<'_, Postgres>::decode(self)?;
                 return Ok(json!(r));
             }
             "DATE" => {
-                let r: Option<String> = Decode::<'_, Postgres>::decode(self)?;
+                let r: Option<chrono::NaiveDate> = Decode::<'_, Postgres>::decode(self)?;
                 return Ok(json!(r));
             }
             "DATE[]" => {
-                let r: Option<Vec<String>> = Decode::<'_, Postgres>::decode(self)?;
+                let r: Option<Vec<chrono::NaiveDate>> = Decode::<'_, Postgres>::decode(self)?;
                 return Ok(json!(r));
             }
             "TIMESTAMP" => {
-                let r: Option<String> = Decode::<'_, Postgres>::decode(self)?;
+                let r: Option<chrono::NaiveDateTime> = Decode::<'_, Postgres>::decode(self)?;
                 return Ok(json!(r));
             }
             "TIMESTAMP[]" => {
-                let r: Option<Vec<String>> = Decode::<'_, Postgres>::decode(self)?;
+                let r: Option<Vec<chrono::NaiveDateTime>> = Decode::<'_, Postgres>::decode(self)?;
                 return Ok(json!(r));
             }
             "TIMESTAMPTZ" => {
-                let r: Option<String> = Decode::<'_, Postgres>::decode(self)?;
+                let r: Option<chrono::DateTime<Utc>> = Decode::<'_, Postgres>::decode(self)?;
                 return Ok(json!(r));
             }
             "TIMESTAMPTZ[]" => {
-                let r: Option<Vec<String>> = Decode::<'_, Postgres>::decode(self)?;
+                let r: Option<Vec<chrono::DateTime<Utc>>> = Decode::<'_, Postgres>::decode(self)?;
                 return Ok(json!(r));
             }
             "CIDR" | "INET" => {

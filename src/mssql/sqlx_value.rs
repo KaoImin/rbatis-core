@@ -47,19 +47,22 @@ impl<'r> JsonCodec for sqlx_core::mssql::MssqlValueRef<'r> {
                 return Ok(json!(r));
             }
 
-            "DATE" | "TIME" | "DATETIME" | "TIMESTAMP" => {
-                let r: Option<String> = Decode::<'_, Mssql>::decode(self)?;
-                return Ok(json!(r));
-            }
+            //TODO  "DATE" | "TIME" | "DATETIME" | "TIMESTAMP" => {
+            //     let r: Option<String> = Decode::<'_, Mssql>::decode(self)?;
+            //     return Ok(json!(r));
+            // }
 
-            "NEWDECIMAL" => {
-                let r: Option<String> = Decode::<'_, Mssql>::decode(self)?;
-                return Ok(json!(r));
-            }
+            //TODO "NEWDECIMAL" => {
+            //     let r: Option<String> = Decode::<'_, Mssql>::decode(self)?;
+            //     return Ok(json!(r));
+            // }
+
             // you can use already supported types to decode this
             _ => {
-                let r: Option<String> = Decode::<'_, Mssql>::decode(self)?;
-                return Ok(json!(r));
+                return Err(crate::Error::from(format!(
+                    "un support database type for:{:?}!",
+                    self.type_info().name()
+                )))
             }
         }
     }

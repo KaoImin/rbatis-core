@@ -6,7 +6,7 @@ members = [
 
 [package]
 name = "rbatis-core"
-version = "1.8.87"
+version = "1.8.88"
 description = "Core of rbatis, the rust SQL toolkit. Not intended to be used directly."
 license = "Apache-2.0"
 edition = "2018"
@@ -40,8 +40,8 @@ log = { version = "0.4", default-features = false }
 rexpr = { version = "1.0" }
 py_sql = "1.0"
 lazy_static = "1.4"
-time = { version = "0.2.16", features = ["serde"] }
-ipnetwork = { version = "0.17.0", features = ["serde"] }
+time = { version = "0.2", features = ["serde"] }
+ipnetwork = { version = "0.17", features = ["serde"] }
 sqlx-core = { version = "0.5.5", features = ["all-types", "runtime-async-std-rustls"], optional = true }
 uuid = { version = "0.8", features = ["serde", "v4"] }
 #only pg

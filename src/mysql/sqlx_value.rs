@@ -9,6 +9,7 @@ use sqlx_core::types::{BigDecimal, Json};
 use sqlx_core::value::ValueRef;
 
 use crate::convert::{JsonCodec, RefJsonCodec, ResultCodec};
+use chrono::{DateTime, Utc};
 
 impl<'r> JsonCodec for sqlx_core::mysql::MySqlValueRef<'r> {
     fn try_to_json(self) -> crate::Result<serde_json::Value> {
@@ -76,10 +77,24 @@ impl<'r> JsonCodec for sqlx_core::mysql::MySqlValueRef<'r> {
                 let r: Option<u8> = Decode::<'_, MySql>::decode(self)?;
                 return Ok(json!(r));
             }
-            "DATE" | "TIME" | "YEAR" | "DATETIME" | "TIMESTAMP" => {
-                let r: Option<String> = Decode::<'_, MySql>::decode(self)?;
+
+            "DATE" => {
+                let r: Option<chrono::NaiveDate> = Decode::<'_, MySql>::decode(self)?;
                 return Ok(json!(r));
             }
+            "TIME" | "YEAR" => {
+                let r: Option<chrono::NaiveTime> = Decode::<'_, MySql>::decode(self)?;
+                return Ok(json!(r));
+            }
+            "DATETIME" => {
+                let r: Option<chrono::NaiveDateTime> = Decode::<'_, MySql>::decode(self)?;
+                return Ok(json!(r));
+            }
+            "TIMESTAMP" => {
+                let r: Option<DateTime<Utc>> = Decode::<'_, MySql>::decode(self)?;
+                return Ok(json!(r));
+            }
+
             "JSON" => {
                 let r: Option<Json<serde_json::Value>> = Decode::<'_, MySql>::decode(self)?;
                 return Ok(json!(r));
