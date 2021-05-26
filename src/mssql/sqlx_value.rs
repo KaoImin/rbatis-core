@@ -48,13 +48,13 @@ impl<'r> JsonCodec for sqlx_core::mssql::MssqlValueRef<'r> {
             }
 
             "DATE" | "TIME" | "DATETIME" | "TIMESTAMP" => {
-                let r: String = Decode::<'_, Mssql>::decode(self)?;
+                let r: Option<String> = Decode::<'_, Mssql>::decode(self)?;
                 return Ok(json!(r));
             }
 
             "NEWDECIMAL" => {
-                let r: String = Decode::<'_, Mssql>::decode(self)?;
-                return Ok(serde_json::Value::from(r));
+                let r: Option<String> = Decode::<'_, Mssql>::decode(self)?;
+                return Ok(json!(r));
             }
             // you can use already supported types to decode this
             _ => {
