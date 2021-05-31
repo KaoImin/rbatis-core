@@ -146,8 +146,8 @@ impl DBPool {
         }
     }
 
-    pub fn make_query<'f, 's>(&'f self, sql: &'s str) -> crate::Result<DBQuery<'s>> {
-        match &self.driver_type {
+    pub fn make_db_query<'f, 's>( driver_type:&DriverType, sql: &'s str) -> crate::Result<DBQuery<'s>> {
+        match driver_type {
             &DriverType::None => {
                 return Err(Error::from("un init DBPool!"));
             }
@@ -204,6 +204,10 @@ impl DBPool {
                 });
             }
         }
+    }
+
+    pub fn make_query<'f, 's>(&'f self, sql: &'s str) -> crate::Result<DBQuery<'s>> {
+        return Self::make_db_query(&self.driver_type,sql);
     }
     /// Retrieves a connection from the pool.
     ///
