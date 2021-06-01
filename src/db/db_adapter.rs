@@ -367,7 +367,7 @@ impl DBPool {
         }
     }
 
-    pub async fn begin(&self) -> crate::Result<DBTx> {
+    pub async fn begin(&self) -> crate::Result<DBTx<'_>> {
         match &self.driver_type {
             &DriverType::None => {
                 return Err(Error::from("un init DBPool!"));
@@ -1044,7 +1044,7 @@ impl DBPoolConn {
         }
     }
 
-    pub async fn begin(&'static mut self) -> crate::Result<DBTx> {
+    pub async fn begin(&mut self) -> crate::Result<DBTx<'_>> {
         self.check_alive()?;
         match &self.driver_type {
             &DriverType::None => {
@@ -1158,19 +1158,19 @@ impl DBPoolConn {
 }
 
 #[derive(Debug)]
-pub struct DBTx {
+pub struct DBTx<'a> {
     pub driver_type: DriverType,
     #[cfg(feature = "mysql")]
-    pub mysql: Option<Transaction<'static, MySql>>,
+    pub mysql: Option<Transaction<'a, MySql>>,
     #[cfg(feature = "postgres")]
-    pub postgres: Option<Transaction<'static, Postgres>>,
+    pub postgres: Option<Transaction<'a, Postgres>>,
     #[cfg(feature = "sqlite")]
-    pub sqlite: Option<Mutex<Transaction<'static, Sqlite>>>,
+    pub sqlite: Option<Mutex<Transaction<'a, Sqlite>>>,
     #[cfg(feature = "mssql")]
-    pub mssql: Option<Transaction<'static, Mssql>>,
+    pub mssql: Option<Transaction<'a, Mssql>>,
 }
 
-impl DBTx {
+impl DBTx<'_> {
     pub async fn commit(&mut self) -> crate::Result<()> {
         match &self.driver_type {
             &DriverType::None => {
