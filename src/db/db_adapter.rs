@@ -146,7 +146,7 @@ impl DBPool {
         }
     }
 
-    pub fn make_db_query<'f, 's>( driver_type:&DriverType, sql: &'s str) -> crate::Result<DBQuery<'s>> {
+    pub fn make_db_query<'f, 's>(driver_type: &DriverType, sql: &'s str) -> crate::Result<DBQuery<'s>> {
         match driver_type {
             &DriverType::None => {
                 return Err(Error::from("un init DBPool!"));
@@ -207,7 +207,7 @@ impl DBPool {
     }
 
     pub fn make_query<'f, 's>(&'f self, sql: &'s str) -> crate::Result<DBQuery<'s>> {
-        return Self::make_db_query(&self.driver_type,sql);
+        return Self::make_db_query(&self.driver_type, sql);
     }
     /// Retrieves a connection from the pool.
     ///
@@ -529,50 +529,50 @@ impl DBConnectOption {
     pub fn from(driver: &str) -> Result<Self> {
         if driver.starts_with("mysql") {
             #[cfg(feature = "mysql")]
-            {
-                let mut conn_opt = MySqlConnectOptions::from_str(driver)?;
-                if !driver.contains("ssl-mode") {
-                    conn_opt = conn_opt.ssl_mode(MySqlSslMode::Disabled);
+                {
+                    let mut conn_opt = MySqlConnectOptions::from_str(driver)?;
+                    if !driver.contains("ssl-mode") {
+                        conn_opt = conn_opt.ssl_mode(MySqlSslMode::Disabled);
+                    }
+                    return Self::from_mysql(&conn_opt);
                 }
-                return Self::from_mysql(&conn_opt);
-            }
             #[cfg(not(feature = "mysql"))]
-            {
-                return Err(Error::from("[rbatis] not enable feature!"));
-            }
+                {
+                    return Err(Error::from("[rbatis] not enable feature!"));
+                }
         } else if driver.starts_with("postgres") {
             #[cfg(feature = "postgres")]
-            {
-                let mut conn_opt = PgConnectOptions::from_str(driver)?;
-                if !driver.contains("ssl-mode") && !driver.contains("sslmode") {
-                    conn_opt = conn_opt.ssl_mode(PgSslMode::Disable);
+                {
+                    let mut conn_opt = PgConnectOptions::from_str(driver)?;
+                    if !driver.contains("ssl-mode") && !driver.contains("sslmode") {
+                        conn_opt = conn_opt.ssl_mode(PgSslMode::Disable);
+                    }
+                    return Self::from_pg(&conn_opt);
                 }
-                return Self::from_pg(&conn_opt);
-            }
             #[cfg(not(feature = "postgres"))]
-            {
-                return Err(Error::from("[rbatis] not enable feature!"));
-            }
+                {
+                    return Err(Error::from("[rbatis] not enable feature!"));
+                }
         } else if driver.starts_with("sqlite") {
             #[cfg(feature = "sqlite")]
-            {
-                let conn_opt = SqliteConnectOptions::from_str(driver)?;
-                return Self::from_sqlite(&conn_opt);
-            }
+                {
+                    let conn_opt = SqliteConnectOptions::from_str(driver)?;
+                    return Self::from_sqlite(&conn_opt);
+                }
             #[cfg(not(feature = "sqlite"))]
-            {
-                return Err(Error::from("[rbatis] not enable feature!"));
-            }
+                {
+                    return Err(Error::from("[rbatis] not enable feature!"));
+                }
         } else if driver.starts_with("mssql") || driver.starts_with("sqlserver") {
             #[cfg(feature = "mssql")]
-            {
-                let conn_opt = MssqlConnectOptions::from_str(driver)?;
-                return Self::from_mssql(&conn_opt);
-            }
+                {
+                    let conn_opt = MssqlConnectOptions::from_str(driver)?;
+                    return Self::from_mssql(&conn_opt);
+                }
             #[cfg(not(feature = "mssql"))]
-            {
-                return Err(Error::from("[rbatis] not enable feature!"));
-            }
+                {
+                    return Err(Error::from("[rbatis] not enable feature!"));
+                }
         } else {
             return Err(Error::from("unsupport driver type!"));
         }
@@ -844,8 +844,8 @@ impl DBPoolConn {
     }
 
     pub async fn fetch<'q, T>(&mut self, sql: &'q str) -> crate::Result<(T, usize)>
-    where
-        T: DeserializeOwned,
+        where
+            T: DeserializeOwned,
     {
         self.check_alive()?;
         match &self.driver_type {
@@ -926,8 +926,8 @@ impl DBPoolConn {
     }
 
     pub async fn fetch_parperd<T>(&mut self, sql: DBQuery<'_>) -> crate::Result<(T, usize)>
-    where
-        T: DeserializeOwned,
+        where
+            T: DeserializeOwned,
     {
         self.check_alive()?;
         match &self.driver_type {
@@ -1171,7 +1171,7 @@ pub struct DBTx<'a> {
 }
 
 impl DBTx<'_> {
-    pub async fn commit(&mut self) -> crate::Result<()> {
+    pub async fn commit(mut self) -> crate::Result<()> {
         match &self.driver_type {
             &DriverType::None => {
                 return Err(Error::from("un init DBPool!"));
@@ -1224,8 +1224,8 @@ impl DBTx<'_> {
     }
 
     pub async fn fetch<'q, T>(&mut self, sql: &'q str) -> crate::Result<(T, usize)>
-    where
-        T: DeserializeOwned,
+        where
+            T: DeserializeOwned,
     {
         match &self.driver_type {
             &DriverType::None => {
@@ -1277,8 +1277,8 @@ impl DBTx<'_> {
     }
 
     pub async fn fetch_parperd<'q, T>(&mut self, sql: DBQuery<'q>) -> crate::Result<(T, usize)>
-    where
-        T: DeserializeOwned,
+        where
+            T: DeserializeOwned,
     {
         match &self.driver_type {
             &DriverType::None => {
