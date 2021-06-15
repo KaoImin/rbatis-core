@@ -25,6 +25,7 @@ mod postgres;
 mod sqlite;
 #[macro_use]
 pub mod error;
+#[macro_use]
 pub mod convert;
 pub mod db;
 pub mod decode;

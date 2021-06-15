@@ -30,8 +30,8 @@ mod test {
 
     #[test]
     pub fn bench_convert() {
-        let mut s = String::new();
-        DriverType::Postgres.stmt_convert(1000, &mut s);
+        let mut s = String::with_capacity(200000);
+        DriverType::Postgres.stmt_convert(0, &mut s);
         println!("stmt:{}", s);
         bench!(100000,{
             DriverType::Postgres.stmt_convert(1,&mut s);
