@@ -71,9 +71,3 @@ impl DriverType {
     }
 }
 
-impl StringConvert for DriverType {
-    fn convert(&self, index: usize) -> String {
-        self.stmt_convert(index)
-    }
-}
-

@@ -2,22 +2,32 @@ use serde_json::Value;
 
 use crate::db::DriverType;
 use crate::Result;
+use std::fmt::Write;
 
 ///the stmt replace str convert
 pub trait StmtConvert {
-    fn stmt_convert(&self, index: usize) -> String;
+    fn stmt_convert(&self, index: usize, item: &mut String);
 }
 
 impl StmtConvert for DriverType {
-    fn stmt_convert(&self, index: usize) -> String {
+    fn stmt_convert(&self, index: usize, item: &mut String) {
         match &self {
             DriverType::Postgres => {
-                format!("${}", index + 1)
+                item.push('$');
+                item.write_fmt(format_args!("{}", index))
+                    .expect("a Display implementation returned an error unexpectedly");
             }
-            DriverType::Mysql => "?".to_string(),
-            DriverType::Sqlite => "?".to_string(),
+            DriverType::Mysql => {
+                item.push('?');
+            }
+            DriverType::Sqlite => {
+                item.push('?');
+            }
             DriverType::Mssql => {
-                format!("@p{}", index + 1)
+                item.push('@');
+                item.push('p');
+                item.write_fmt(format_args!("{}", (index + 1)))
+                    .expect("a Display implementation returned an error unexpectedly");
             }
             DriverType::None => {
                 panic!("[rbatis] un support none for driver type!")
