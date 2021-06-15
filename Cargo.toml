@@ -6,7 +6,7 @@ members = [
 
 [package]
 name = "rbatis-core"
-version = "2.0.0"
+version = "2.0.5"
 description = "Core of rbatis, the rust SQL toolkit. Not intended to be used directly."
 license = "Apache-2.0"
 edition = "2018"
