@@ -45,6 +45,7 @@ impl StmtConvert for DriverType {
         match &self {
             DriverType::Postgres => {
                 item.push('$');
+                let index = index + 1;
                 push_index!(index,item);
             }
             DriverType::Mysql => {
@@ -56,6 +57,7 @@ impl StmtConvert for DriverType {
             DriverType::Mssql => {
                 item.push('@');
                 item.push('p');
+                let index = index + 1;
                 push_index!(index,item);
             }
             DriverType::None => {
