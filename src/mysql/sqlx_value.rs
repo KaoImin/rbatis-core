@@ -11,6 +11,9 @@ use sqlx_core::value::ValueRef;
 use crate::convert::{JsonCodec, RefJsonCodec, ResultCodec};
 use chrono::{DateTime, Utc};
 
+use crate::{new_json_option_into};
+
+
 impl<'r> JsonCodec for sqlx_core::mysql::MySqlValueRef<'r> {
     fn try_to_json(self) -> crate::Result<serde_json::Value> {
         match self.type_info().name() {
@@ -19,63 +22,60 @@ impl<'r> JsonCodec for sqlx_core::mysql::MySqlValueRef<'r> {
             }
             "DECIMAL" => {
                 let r: Option<String> = Decode::<'_, MySql>::decode(self)?;
-                return Ok(json!(r));
+                return Ok(new_json_option_into!(r));
             }
             "BIGINT UNSIGNED" => {
                 let r: Option<u64> = Decode::<'_, MySql>::decode(self)?;
-                return Ok(json!(r));
+                return Ok(new_json_option_into!(r));
             }
             "BIGINT" => {
                 let r: Option<i64> = Decode::<'_, MySql>::decode(self)?;
-                return Ok(json!(r));
+                return Ok(new_json_option_into!(r));
             }
             "INT UNSIGNED" | "MEDIUMINT UNSIGNED" => {
                 let r: Option<u32> = Decode::<'_, MySql>::decode(self)?;
-                return Ok(json!(r));
+                return Ok(new_json_option_into!(r));
             }
             "INT" | "MEDIUMINT" => {
                 let r: Option<i32> = Decode::<'_, MySql>::decode(self)?;
-                return Ok(json!(r));
+                return Ok(new_json_option_into!(r));
             }
             "SMALLINT" => {
                 let r: Option<i16> = Decode::<'_, MySql>::decode(self)?;
-                return Ok(json!(r));
+                return Ok(new_json_option_into!(r));
             }
             "SMALLINT UNSIGNED" => {
                 let r: Option<u16> = Decode::<'_, MySql>::decode(self)?;
-                return Ok(json!(r));
+                return Ok(new_json_option_into!(r));
             }
             "TINYINT UNSIGNED" => {
                 let r: Option<u8> = Decode::<'_, MySql>::decode(self)?;
-                return Ok(json!(r));
+                return Ok(new_json_option_into!(r));
             }
             "TINYINT" => {
                 let r: Option<i8> = Decode::<'_, MySql>::decode(self)?;
-                return Ok(json!(r));
+                return Ok(new_json_option_into!(r));
             }
             "FLOAT" => {
                 let r: Option<f32> = Decode::<'_, MySql>::decode(self)?;
-
-                return Ok(json!(r));
+                return Ok(new_json_option_into!(r));
             }
             "DOUBLE" => {
                 let r: Option<f64> = Decode::<'_, MySql>::decode(self)?;
-
-                return Ok(json!(r));
+                return Ok(new_json_option_into!(r));
             }
             "BINARY" | "VARBINARY" | "CHAR" | "VARCHAR" | "TEXT" | "ENUM" => {
                 let r: Option<String> = Decode::<'_, MySql>::decode(self)?;
-
-                return Ok(json!(r));
+                return Ok(new_json_option_into!(r));
             }
             "BLOB" | "TINYBLOB" | "MEDIUMBLOB" | "LONGBLOB" | "TINYTEXT" | "MEDIUMTEXT"
             | "LONGTEXT" => {
                 let r: Option<Vec<u8>> = Decode::<'_, MySql>::decode(self)?;
-                return Ok(json!(r));
+                return Ok(new_json_option_into!(r));
             }
             "BIT" | "BOOLEAN" => {
                 let r: Option<u8> = Decode::<'_, MySql>::decode(self)?;
-                return Ok(json!(r));
+                return Ok(new_json_option_into!(r));
             }
 
             "DATE" => {
@@ -94,7 +94,6 @@ impl<'r> JsonCodec for sqlx_core::mysql::MySqlValueRef<'r> {
                 let r: Option<chrono::NaiveDateTime> = Decode::<'_, MySql>::decode(self)?;
                 return Ok(json!(r));
             }
-
             "JSON" => {
                 let r: Option<Json<serde_json::Value>> = Decode::<'_, MySql>::decode(self)?;
                 return Ok(json!(r));
@@ -102,7 +101,7 @@ impl<'r> JsonCodec for sqlx_core::mysql::MySqlValueRef<'r> {
             _ => {
                 //TODO "GEOMETRY" support. for now you can use already supported types to decode this
                 let r: Option<Vec<u8>> = Decode::<'_, MySql>::decode(self)?;
-                return Ok(json!(r));
+                return Ok(new_json_option_into!(r));
             }
         }
     }

@@ -10,6 +10,8 @@ use sqlx_core::value::ValueRef;
 
 use crate::convert::{JsonCodec, RefJsonCodec, ResultCodec};
 
+use crate::{new_json_option_into};
+
 impl<'r> JsonCodec for sqlx_core::mssql::MssqlValueRef<'r> {
     fn try_to_json(self) -> crate::Result<serde_json::Value> {
         //TODO batter way to match type replace use string match
@@ -19,32 +21,32 @@ impl<'r> JsonCodec for sqlx_core::mssql::MssqlValueRef<'r> {
             }
             "TINYINT" => {
                 let r: Option<i8> = Decode::<'_, Mssql>::decode(self)?;
-                return Ok(json!(r));
+                return Ok(new_json_option_into!(r));
             }
             "SMALLINT" => {
                 let r: Option<i16> = Decode::<'_, Mssql>::decode(self)?;
-                return Ok(json!(r));
+                return Ok(new_json_option_into!(r));
             }
             "INT" => {
                 let r: Option<i32> = Decode::<'_, Mssql>::decode(self)?;
-                return Ok(json!(r));
+                return Ok(new_json_option_into!(r));
             }
             "BIGINT" => {
                 let r: Option<i64> = Decode::<'_, Mssql>::decode(self)?;
-                return Ok(json!(r));
+                return Ok(new_json_option_into!(r));
             }
             "REAL" => {
                 let r: Option<f32> = Decode::<'_, Mssql>::decode(self)?;
-                return Ok(json!(r));
+                return Ok(new_json_option_into!(r));
             }
             "FLOAT" => {
                 let r: Option<f64> = Decode::<'_, Mssql>::decode(self)?;
-                return Ok(json!(r));
+                return Ok(new_json_option_into!(r));
             }
 
             "VARCHAR" | "NVARCHAR" | "BIGVARCHAR" | "CHAR" | "BIGCHAR" | "NCHAR" => {
                 let r: Option<String> = Decode::<'_, Mssql>::decode(self)?;
-                return Ok(json!(r));
+                return Ok(new_json_option_into!(r));
             }
 
             //TODO  "DATE" | "TIME" | "DATETIME" | "TIMESTAMP" => {
@@ -62,7 +64,7 @@ impl<'r> JsonCodec for sqlx_core::mssql::MssqlValueRef<'r> {
                 return Err(crate::Error::from(format!(
                     "un support database type for:{:?}!",
                     self.type_info().name()
-                )))
+                )));
             }
         }
     }

@@ -83,3 +83,17 @@ pub trait RefJsonCodec {
 pub trait ResultCodec<T> {
     fn into_result(self) -> Result<T>;
 }
+
+#[macro_export]
+macro_rules! new_json_option_into{
+    ($r:ident) => {
+               {
+                    if $r.is_some() {
+                         $r.unwrap().into()
+                    } else {
+                        serde_json::Value::Null
+                    }
+                }
+    };
+}
+
