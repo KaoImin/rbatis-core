@@ -5,7 +5,7 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
 pub use db_adapter::{
-    DBConnectOption, DBConnection, DBExecResult, DBPool, DBPoolConn, DBQuery, DBTx, DBQueryBind
+    DBConnectOption, DBConnection, DBExecResult, DBPool, DBPoolConn, DBQuery, DBTx
 };
 use py_sql::StringConvert;
 use crate::convert::StmtConvert;

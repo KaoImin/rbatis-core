@@ -666,13 +666,9 @@ pub struct DBQuery<'q> {
     pub mssql: Option<Query<'q, Mssql, MssqlArguments>>,
 }
 
-/// bind json value into db, for example bind to DBQuery<'q>
-pub trait DBQueryBind {
-    fn bind_value(&mut self, t: &serde_json::Value) -> crate::Result<()>;
-}
 
-impl<'q> DBQueryBind for DBQuery<'q> {
-    fn bind_value(&mut self, t: &serde_json::Value) -> crate::Result<()> {
+impl<'q> DBQuery<'q> {
+    pub fn bind_value(&mut self, t: &serde_json::Value) -> crate::Result<()> {
         match &self.driver_type {
             &DriverType::None => {
                 return Err(Error::from("un init DBPool!"));
