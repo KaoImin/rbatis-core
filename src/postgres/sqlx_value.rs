@@ -28,147 +28,147 @@ impl<'c> JsonCodec for PgValueRef<'c> {
             "NUMERIC" => {
                 //decimal
                 let r: Option<String> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(new_json_option_into!(r));
+                return Ok(new_json_option_into!(r));
             }
             "NUMERIC[]" => {
                 //decimal
                 let r: Option<Vec<String>> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(new_json_option_into!(r));
+                return Ok(new_json_option_into!(r));
             }
             "MONEY" => {
                 //decimal
                 let r: Option<String> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(new_json_option_into!(r));
+                return Ok(new_json_option_into!(r));
             }
             "MONEY[]" => {
                 //decimal
                 let r: Option<Vec<String>> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(new_json_option_into!(r));
+                return Ok(new_json_option_into!(r));
             }
             "BOOL" => {
                 let r: Option<bool> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(new_json_option_into!(r));
+                return Ok(new_json_option_into!(r));
             }
             "BOOL[]" => {
                 let r: Vec<bool> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(r.into());
+                return Ok(r.into());
             }
             "BYTEA" | "BYTEA[]" => {
                 let r: Option<Vec<u8>> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(new_json_option_into!(r));
+                return Ok(new_json_option_into!(r));
             }
             "FLOAT4" => {
                 let r: Option<f32> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(new_json_option_into!(r));
+                return Ok(new_json_option_into!(r));
             }
             "FLOAT4[]" => {
                 let r: Option<Vec<f32>> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(new_json_option_into!(r));
+                return Ok(new_json_option_into!(r));
             }
             "FLOAT8" => {
                 let r: Option<f64> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(new_json_option_into!(r));
+                return Ok(new_json_option_into!(r));
             }
             "FLOAT8[]" => {
                 let r: Option<Vec<f64>> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(new_json_option_into!(r));
+                return Ok(new_json_option_into!(r));
             }
             "INT2" => {
                 let r: Option<i16> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(new_json_option_into!(r));
+                return Ok(new_json_option_into!(r));
             }
             "INT2[]" => {
                 let r: Option<Vec<i16>> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(new_json_option_into!(r));
+                return Ok(new_json_option_into!(r));
             }
             "INT4" => {
                 let r: Option<i32> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(new_json_option_into!(r));
+                return Ok(new_json_option_into!(r));
             }
             "INT4[]" => {
                 let r: Option<Vec<i32>> = Decode::<'_, Postgres>::decode(self)?;
 
-                 return Ok(new_json_option_into!(r));
+                return Ok(new_json_option_into!(r));
             }
             "INT8" => {
                 let r: Option<i64> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(new_json_option_into!(r));
+                return Ok(new_json_option_into!(r));
             }
             "INT8[]" => {
                 let r: Option<Vec<i64>> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(new_json_option_into!(r));
+                return Ok(new_json_option_into!(r));
             }
             "OID" => {
                 let r: Option<u32> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(new_json_option_into!(r));
+                return Ok(new_json_option_into!(r));
             }
             "OID[]" => {
                 let r: Option<Vec<u32>> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(new_json_option_into!(r));
+                return Ok(new_json_option_into!(r));
             }
             "TEXT" | "NAME" | "VARCHAR" | "BPCHAR" | "CHAR" | "\"CHAR\"" | "UNKNOWN" => {
                 let r: Option<String> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(new_json_option_into!(r));
+                return Ok(new_json_option_into!(r));
             }
             "TEXT[]" | "CHAR[]" | "VARCHAR[]" | "\"CHAR\"[]" | "NAME[]" => {
                 let r: Option<Vec<String>> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(new_json_option_into!(r));
+                return Ok(new_json_option_into!(r));
             }
             "UUID" => {
                 let r: Option<Uuid> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(json!(r));
+                return Ok(json!(r));
             }
             "UUID[]" => {
                 let r: Option<Vec<Uuid>> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(json!(r));
+                return Ok(json!(r));
             }
             "JSON" | "JSONB" => {
                 let r: Option<Json<serde_json::Value>> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(json!(r));
+                return Ok(json!(r));
             }
             "JSON[]" | "JSONB[]" => {
                 let r: Option<Vec<Json<serde_json::Value>>> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(json!(r));
+                return Ok(json!(r));
             }
             "TIME" => {
                 let r: Option<Time> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(json!(r));
+                return Ok(json!(r));
             }
             "TIME[]" => {
                 let r: Option<Vec<Time>> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(json!(r));
+                return Ok(json!(r));
             }
             "DATE" => {
                 let r: Option<chrono::NaiveDate> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(json!(r));
+                return Ok(json!(r));
             }
             "DATE[]" => {
                 let r: Option<Vec<chrono::NaiveDate>> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(json!(r));
+                return Ok(json!(r));
             }
             "TIMESTAMP" => {
                 let r: Option<chrono::NaiveDateTime> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(json!(r));
+                return Ok(json!(r));
             }
             "TIMESTAMP[]" => {
                 let r: Option<Vec<chrono::NaiveDateTime>> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(json!(r));
+                return Ok(json!(r));
             }
             "TIMESTAMPTZ" => {
                 let r: Option<chrono::DateTime<Utc>> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(json!(r));
+                return Ok(json!(r));
             }
             "TIMESTAMPTZ[]" => {
                 let r: Option<Vec<chrono::DateTime<Utc>>> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(json!(r));
+                return Ok(json!(r));
             }
             "CIDR" | "INET" => {
                 let r: Option<IpNetwork> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(json!(r));
+                return Ok(json!(r));
             }
             "CIDR[]" | "INET[]" => {
                 let r: Option<Vec<IpNetwork>> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(json!(r));
+                return Ok(json!(r));
             }
 
             "INTERVAL" => {
@@ -178,11 +178,11 @@ impl<'c> JsonCodec for PgValueRef<'c> {
             }
             "VARBIT" | "BIT" => {
                 let r: Option<bit_vec::BitVec> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(json!(r));
+                return Ok(json!(r));
             }
             "VARBIT[]" | "BIT[]" => {
                 let r: Option<Vec<bit_vec::BitVec>> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(json!(r));
+                return Ok(json!(r));
             }
             _ => {
                 //TODO
@@ -207,7 +207,7 @@ impl<'c> JsonCodec for PgValueRef<'c> {
                 // "MACADDR","MACADDR[]",
                 //  you can use already Vec<u8> types to decode this
                 let r: Option<Vec<u8>> = Decode::<'_, Postgres>::decode(self)?;
-                 return Ok(new_json_option_into!(r));
+                return Ok(new_json_option_into!(r));
             }
         }
     }

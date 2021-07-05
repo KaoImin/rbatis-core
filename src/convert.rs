@@ -85,7 +85,7 @@ pub trait ResultCodec<T> {
 }
 
 #[macro_export]
-macro_rules! new_json_option_into{
+macro_rules! new_json_option_into {
     ($r:ident) => {
                {
                     if $r.is_some() {
