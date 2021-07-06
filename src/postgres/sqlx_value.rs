@@ -174,6 +174,9 @@ impl<'c> JsonCodec for PgValueRef<'c> {
             "INTERVAL" => {
                 let r: Option<sqlx_core::postgres::types::PgInterval> =
                     Decode::<'_, Postgres>::decode(self)?;
+                if r.is_none() {
+                    return Ok(serde_json::Value::Null);
+                }
                 return Ok(json!(PgInterval::from(r.unwrap())));
             }
             "VARBIT" | "BIT" => {
