@@ -9,6 +9,7 @@ use sqlx_core::type_info::TypeInfo;
 use sqlx_core::value::ValueRef;
 
 use crate::convert::{JsonCodec, RefJsonCodec, ResultCodec};
+use crate::{new_json_option_into};
 
 impl<'c> JsonCodec for SqliteValueRef<'c> {
     fn try_to_json(self) -> crate::Result<serde_json::Value> {
@@ -17,29 +18,29 @@ impl<'c> JsonCodec for SqliteValueRef<'c> {
             "NULL" => Ok(serde_json::Value::Null),
             "TEXT" => {
                 let r: Option<String> = Decode::<'_, Sqlite>::decode(self)?;
-                return Ok(json!(r));
+                return Ok(new_json_option_into!(r));
             }
             "BOOLEAN" => {
                 let r: Option<bool> = Decode::<'_, Sqlite>::decode(self)?;
-                return Ok(json!(r));
+                return Ok(new_json_option_into!(r));
             }
             "INTEGER" => {
                 let r: Option<i64> = Decode::<'_, Sqlite>::decode(self)?;
-                return Ok(json!(r));
+                return Ok(new_json_option_into!(r));
             }
             "REAL" => {
                 let r: Option<f64> = Decode::<'_, Sqlite>::decode(self)?;
-                return Ok(json!(r));
+                return Ok(new_json_option_into!(r));
             }
             "BLOB" => {
                 let r: Option<Vec<u8>> = Decode::<'_, Sqlite>::decode(self)?;
-                return Ok(json!(r));
+                return Ok(new_json_option_into!(r));
             }
             _ => {
                 //TODO "NUMERIC" |"DATE" | "TIME" | "DATETIME"
                 //you can use already supported types to decode this
                 let r: Option<Vec<u8>> = Decode::<'_, Sqlite>::decode(self)?;
-                return Ok(json!(r));
+                return Ok(new_json_option_into!(r));
             }
         };
     }
