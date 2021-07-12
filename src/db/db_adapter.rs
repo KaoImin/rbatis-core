@@ -681,7 +681,7 @@ impl<'q> DBQuery<'q> {
                         q = q.bind(Some(s.to_owned()));
                     }
                     serde_json::Value::Null => {
-                        q = q.bind(Option::<String>::None);
+                        q = q.bind(Option::<i32>::None);
                     }
                     serde_json::Value::Number(n) => {
                         if n.is_f64() {
@@ -709,7 +709,7 @@ impl<'q> DBQuery<'q> {
                         q = q.bind(Some(s.to_owned()));
                     }
                     serde_json::Value::Null => {
-                        q = q.bind(Option::<String>::None);
+                        q = q.bind(Option::<i32>::None);
                     }
                     serde_json::Value::Number(n) => {
                         if n.is_f64() {
@@ -737,7 +737,7 @@ impl<'q> DBQuery<'q> {
                         q = q.bind(Some(s.to_owned()));
                     }
                     serde_json::Value::Null => {
-                        q = q.bind(Option::<String>::None);
+                        q = q.bind(Option::<i32>::None);
                     }
                     serde_json::Value::Number(n) => {
                         if n.is_f64() {
@@ -765,7 +765,7 @@ impl<'q> DBQuery<'q> {
                         q = q.bind(Some(s.to_owned()));
                     }
                     serde_json::Value::Null => {
-                        q = q.bind(Option::<String>::None);
+                        q = q.bind(Option::<i32>::None);
                     }
                     serde_json::Value::Number(n) => {
                         if n.is_f64() {
