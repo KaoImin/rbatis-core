@@ -4,33 +4,33 @@
 use std::str::FromStr;
 use std::time::Duration;
 
-use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
+use serde::de::DeserializeOwned;
 use sqlx_core::acquire::Acquire;
 use sqlx_core::arguments::{Arguments, IntoArguments};
-use sqlx_core::connection::{ConnectOptions, Connection};
+use sqlx_core::connection::{Connection, ConnectOptions};
 use sqlx_core::database::Database;
 use sqlx_core::encode::Encode;
 use sqlx_core::executor::Executor;
 #[cfg(feature = "mssql")]
 use sqlx_core::mssql::{
-    Mssql, MssqlArguments, MssqlConnectOptions, MssqlConnection, MssqlQueryResult, MssqlPool, MssqlRow,
+    Mssql, MssqlArguments, MssqlConnection, MssqlConnectOptions, MssqlPool, MssqlQueryResult, MssqlRow,
 };
 #[cfg(feature = "mysql")]
 use sqlx_core::mysql::{
-    MySql, MySqlArguments, MySqlConnectOptions, MySqlConnection, MySqlQueryResult, MySqlPool, MySqlRow,
+    MySql, MySqlArguments, MySqlConnection, MySqlConnectOptions, MySqlPool, MySqlQueryResult, MySqlRow,
     MySqlSslMode,
 };
 use sqlx_core::pool::PoolConnection;
 #[cfg(feature = "postgres")]
 use sqlx_core::postgres::{
-    PgArguments, PgConnectOptions, PgConnection, PgQueryResult, PgPool, PgPoolOptions, PgRow, PgSslMode,
+    PgArguments, PgConnection, PgConnectOptions, PgPool, PgPoolOptions, PgQueryResult, PgRow, PgSslMode,
     Postgres,
 };
 use sqlx_core::query::{query, Query};
 #[cfg(feature = "sqlite")]
 use sqlx_core::sqlite::{
-    Sqlite, SqliteArguments, SqliteConnectOptions, SqliteConnection, SqliteQueryResult, SqlitePool,
+    Sqlite, SqliteArguments, SqliteConnection, SqliteConnectOptions, SqlitePool, SqliteQueryResult,
     SqliteRow,
 };
 use sqlx_core::transaction::Transaction;
@@ -39,9 +39,9 @@ use sqlx_core::types::Type;
 use crate::convert::{RefJsonCodec, ResultCodec};
 use crate::db::{DBPoolOptions, DriverType};
 use crate::decode::json_decode;
-use crate::runtime::sync::Mutex;
 use crate::Error;
 use crate::Result;
+use crate::runtime::sync::Mutex;
 
 #[derive(Debug, Clone)]
 pub struct DBPool {
@@ -382,6 +382,7 @@ impl DBPool {
                 sqlite: None,
                 #[cfg(feature = "mssql")]
                 mssql: None,
+                done: false,
             }),
             &DriverType::Postgres => Ok(DBTx {
                 driver_type: self.driver_type,
@@ -393,6 +394,7 @@ impl DBPool {
                 sqlite: None,
                 #[cfg(feature = "mssql")]
                 mssql: None,
+                done: false,
             }),
             &DriverType::Sqlite => Ok(DBTx {
                 driver_type: self.driver_type,
@@ -404,6 +406,7 @@ impl DBPool {
                 mysql: None,
                 #[cfg(feature = "mssql")]
                 mssql: None,
+                done: false,
             }),
             &DriverType::Mssql => Ok(DBTx {
                 driver_type: self.driver_type,
@@ -415,6 +418,7 @@ impl DBPool {
                 postgres: None,
                 #[cfg(feature = "sqlite")]
                 sqlite: None,
+                done: false,
             }),
         }
     }
@@ -1061,6 +1065,7 @@ impl DBPoolConn {
                 sqlite: None,
                 #[cfg(feature = "mssql")]
                 mssql: None,
+                done: false
             }),
             &DriverType::Postgres => Ok(DBTx {
                 driver_type: self.driver_type,
@@ -1072,6 +1077,7 @@ impl DBPoolConn {
                 sqlite: None,
                 #[cfg(feature = "mssql")]
                 mssql: None,
+                done: false
             }),
             &DriverType::Sqlite => Ok(DBTx {
                 driver_type: self.driver_type,
@@ -1083,6 +1089,7 @@ impl DBPoolConn {
                 mysql: None,
                 #[cfg(feature = "mssql")]
                 mssql: None,
+                done: false
             }),
             &DriverType::Mssql => Ok(DBTx {
                 driver_type: self.driver_type,
@@ -1094,6 +1101,7 @@ impl DBPoolConn {
                 sqlite: None,
                 #[cfg(feature = "postgres")]
                 postgres: None,
+                done: false
             }),
         }
     }
@@ -1169,18 +1177,34 @@ pub struct DBTx<'a> {
     pub sqlite: Option<Mutex<Transaction<'a, Sqlite>>>,
     #[cfg(feature = "mssql")]
     pub mssql: Option<Transaction<'a, Mssql>>,
+
+    /// is tx done?
+    pub done: bool,
 }
 
 impl DBTx<'_> {
+
+    pub fn is_done(&self) -> bool {
+        self.done
+    }
+
     pub async fn commit(mut self) -> crate::Result<()> {
         match &self.driver_type {
             &DriverType::None => {
                 return Err(Error::from("un init DBPool!"));
             }
             #[cfg(feature = "mysql")]
-            &DriverType::Mysql => self.mysql.take().unwrap().commit().await.into_result(),
+            &DriverType::Mysql => {
+                self.mysql.take().unwrap().commit().await.into_result()?;
+                self.done = true;
+                return Ok(());
+            }
             #[cfg(feature = "postgres")]
-            &DriverType::Postgres => self.postgres.take().unwrap().commit().await.into_result(),
+            &DriverType::Postgres => {
+                self.postgres.take().unwrap().commit().await.into_result()?;
+                self.done = true;
+                return Ok(());
+            },
             #[cfg(feature = "sqlite")]
             &DriverType::Sqlite => self
                 .sqlite
@@ -1191,7 +1215,11 @@ impl DBTx<'_> {
                 .await
                 .into_result(),
             #[cfg(feature = "mssql")]
-            &DriverType::Mssql => self.mssql.take().unwrap().commit().await.into_result(),
+            &DriverType::Mssql => {
+                self.mssql.take().unwrap().commit().await.into_result()?;
+                self.done = true;
+                return Ok(());
+            },
             _ => {
                 return Err(Error::from("[rbatis] feature not enable!"));
             }
@@ -1204,9 +1232,17 @@ impl DBTx<'_> {
                 return Err(Error::from("un init DBPool!"));
             }
             #[cfg(feature = "mysql")]
-            &DriverType::Mysql => self.mysql.take().unwrap().rollback().await.into_result(),
+            &DriverType::Mysql => {
+                self.mysql.take().unwrap().rollback().await.into_result()?;
+                self.done = true;
+                return Ok(());
+            },
             #[cfg(feature = "postgres")]
-            &DriverType::Postgres => self.postgres.take().unwrap().rollback().await.into_result(),
+            &DriverType::Postgres => {
+                self.postgres.take().unwrap().rollback().await.into_result()?;
+                self.done = true;
+                return Ok(());
+            },
             #[cfg(feature = "sqlite")]
             &DriverType::Sqlite => self
                 .sqlite
@@ -1217,7 +1253,11 @@ impl DBTx<'_> {
                 .await
                 .into_result(),
             #[cfg(feature = "mssql")]
-            &DriverType::Mssql => self.mssql.take().unwrap().rollback().await.into_result(),
+            &DriverType::Mssql => {
+                self.mssql.take().unwrap().rollback().await.into_result()?;
+                self.done = true;
+                return Ok(());
+            },
             _ => {
                 return Err(Error::from("[rbatis] feature not enable!"));
             }
