@@ -1042,6 +1042,10 @@ impl DBTx {
         self.done
     }
 
+    pub fn take(mut self) -> Option<DBPoolConn> {
+        self.conn
+    }
+
     pub async fn begin(&mut self) -> crate::Result<()> {
         if !self.done {
             return Ok(());
