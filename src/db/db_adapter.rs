@@ -770,7 +770,7 @@ impl DBPoolConn {
             &DriverType::Mysql => {
                 let async_stream: Vec<MySqlRow> =
                     self.mysql.as_mut().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.fetch_all(sql).await?;
-                let json_array = async_stream.try_to_json()?.as_array().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.to_owned();
+                let json_array = async_stream.try_to_json()?.as_array().ok_or_else(|| Error::from("[rbatis-core]  try_to_json is not array!"))?.to_owned();
                 let return_len = json_array.len();
                 let result = json_decode::<T>(json_array)?;
                 Ok((result, return_len))
@@ -779,7 +779,7 @@ impl DBPoolConn {
             &DriverType::Postgres => {
                 let async_stream: Vec<PgRow> =
                     self.postgres.as_mut().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.fetch_all(sql).await?;
-                let json_array = async_stream.try_to_json()?.as_array().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.to_owned();
+                let json_array = async_stream.try_to_json()?.as_array().ok_or_else(|| Error::from("[rbatis-core]  try_to_json is not array!"))?.to_owned();
                 let return_len = json_array.len();
                 let result = json_decode::<T>(json_array)?;
                 Ok((result, return_len))
@@ -787,7 +787,7 @@ impl DBPoolConn {
             #[cfg(feature = "sqlite")]
             &DriverType::Sqlite => {
                 let data: Vec<SqliteRow> = self.sqlite.as_mut().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.fetch_all(sql).await?;
-                let json_array = data.try_to_json()?.as_array().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.to_owned();
+                let json_array = data.try_to_json()?.as_array().ok_or_else(|| Error::from("[rbatis-core]  try_to_json is not array!"))?.to_owned();
                 let return_len = json_array.len();
                 let result = json_decode::<T>(json_array)?;
                 Ok((result, return_len))
@@ -796,7 +796,7 @@ impl DBPoolConn {
             &DriverType::Mssql => {
                 let async_stream: Vec<MssqlRow> =
                     self.mssql.as_mut().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.fetch_all(sql).await?;
-                let json_array = async_stream.try_to_json()?.as_array().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.to_owned();
+                let json_array = async_stream.try_to_json()?.as_array().ok_or_else(|| Error::from("[rbatis-core]  try_to_json is not array!"))?.to_owned();
                 let return_len = json_array.len();
                 let result = json_decode::<T>(json_array)?;
                 Ok((result, return_len))
@@ -856,7 +856,7 @@ impl DBPoolConn {
                     .ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?
                     .fetch_all(sql.mysql.ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?)
                     .await?;
-                let json_array = data.try_to_json()?.as_array().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.to_owned();
+                let json_array = data.try_to_json()?.as_array().ok_or_else(|| Error::from("[rbatis-core]  try_to_json is not array!"))?.to_owned();
                 let return_len = json_array.len();
                 let result = json_decode::<T>(json_array)?;
                 Ok((result, return_len))
@@ -869,7 +869,7 @@ impl DBPoolConn {
                     .ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?
                     .fetch_all(sql.postgres.ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?)
                     .await?;
-                let json_array = data.try_to_json()?.as_array().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.to_owned();
+                let json_array = data.try_to_json()?.as_array().ok_or_else(|| Error::from("[rbatis-core]  try_to_json is not array!"))?.to_owned();
                 let return_len = json_array.len();
                 let result = json_decode::<T>(json_array)?;
                 Ok((result, return_len))
@@ -882,7 +882,7 @@ impl DBPoolConn {
                     .ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?
                     .fetch_all(sql.sqlite.ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?)
                     .await?;
-                let json_array = data.try_to_json()?.as_array().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.to_owned();
+                let json_array = data.try_to_json()?.as_array().ok_or_else(|| Error::from("[rbatis-core]  try_to_json is not array!"))?.to_owned();
                 let return_len = json_array.len();
                 let result = json_decode::<T>(json_array)?;
                 Ok((result, return_len))
@@ -895,7 +895,7 @@ impl DBPoolConn {
                     .ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?
                     .fetch_all(sql.mssql.ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?)
                     .await?;
-                let json_array = data.try_to_json()?.as_array().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.to_owned();
+                let json_array = data.try_to_json()?.as_array().ok_or_else(|| Error::from("[rbatis-core]  try_to_json is not array!"))?.to_owned();
                 let return_len = json_array.len();
                 let result = json_decode::<T>(json_array)?;
                 Ok((result, return_len))
