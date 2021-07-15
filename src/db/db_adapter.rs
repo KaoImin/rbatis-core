@@ -807,7 +807,7 @@ impl DBPoolConn {
         }
     }
 
-    pub async fn execute(&mut self, sql: &str) -> crate::Result<DBExecResult> {
+    pub async fn exec(&mut self, sql: &str) -> crate::Result<DBExecResult> {
         self.check_alive()?;
         match &self.driver_type {
             &DriverType::None => {
@@ -1051,21 +1051,21 @@ impl DBTx {
             return Ok(());
         }
         let conn = self.conn.as_mut().ok_or_else(|| Error::from("[rbatis-core] DBTx conn is none!"))?;
-        conn.execute("BEGIN").await?;
+        conn.exec("BEGIN").await?;
         self.done = false;
         return Ok(());
     }
 
     pub async fn commit(&mut self) -> crate::Result<()> {
         let conn = self.conn.as_mut().ok_or_else(|| Error::from("[rbatis-core] DBTx conn is none!"))?;
-        conn.execute("COMMIT").await?;
+        conn.exec("COMMIT").await?;
         self.done = true;
         return Ok(());
     }
 
     pub async fn rollback(&mut self) -> crate::Result<()> {
         let conn = self.conn.as_mut().ok_or_else(|| Error::from("[rbatis-core] DBTx conn is none!"))?;
-        conn.execute("ROLLBACK").await?;
+        conn.exec("ROLLBACK").await?;
         self.done = true;
         return Ok(());
     }
@@ -1086,9 +1086,9 @@ impl DBTx {
         return conn.fetch_parperd(sql).await;
     }
 
-    pub async fn execute(&mut self, sql: &str) -> crate::Result<DBExecResult> {
+    pub async fn exec(&mut self, sql: &str) -> crate::Result<DBExecResult> {
         let conn = self.conn.as_mut().ok_or_else(|| Error::from("[rbatis-core] DBTx conn is none!"))?;
-        return conn.execute(sql).await;
+        return conn.exec(sql).await;
     }
 
     pub async fn exec_prepare(&mut self, sql: DBQuery<'_>) -> crate::Result<DBExecResult> {

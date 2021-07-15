@@ -45,7 +45,7 @@ mod test {
         let pool = DBPool::new("mysql://root:123456@localhost:3306/test").await?;
         let mut tx = pool.begin().await?;
         let data = tx
-            .execute("UPDATE `biz_activity` SET `name` = 'test2' WHERE (`id` = '222');")
+            .exec("UPDATE `biz_activity` SET `name` = 'test2' WHERE (`id` = '222');")
             .await.unwrap();
         println!("count: {:?}", data);
         tx.commit().await.unwrap();
@@ -59,7 +59,7 @@ mod test {
         let mut conn = pool.acquire().await?;
         let mut tx = conn.begin().await?;
         let data = tx
-            .execute("UPDATE `biz_activity` SET `name` = 'test2' WHERE (`id` = '222');")
+            .exec("UPDATE `biz_activity` SET `name` = 'test2' WHERE (`id` = '222');")
             .await.unwrap();
         println!("count: {:?}", data);
         tx.commit().await.unwrap();
@@ -73,7 +73,7 @@ mod test {
         let mut conn = pool.acquire().await?;
         let mut tx = conn.begin().await?;
         let data = tx
-            .execute("UPDATE `biz_activity` SET `name` = 'test2' WHERE (`id` = '222');")
+            .exec("UPDATE `biz_activity` SET `name` = 'test2' WHERE (`id` = '222');")
             .await.unwrap();
         println!("count: {:?}", data);
         tx.rollback().await.unwrap();
