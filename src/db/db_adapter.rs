@@ -21,7 +21,7 @@ use sqlx_core::mysql::{
     MySql, MySqlArguments, MySqlConnection, MySqlConnectOptions, MySqlPool, MySqlQueryResult, MySqlRow,
     MySqlSslMode,
 };
-use sqlx_core::pool::PoolConnection;
+use sqlx_core::pool::{PoolConnection, Pool};
 #[cfg(feature = "postgres")]
 use sqlx_core::postgres::{
     PgArguments, PgConnection, PgConnectOptions, PgPool, PgPoolOptions, PgQueryResult, PgRow, PgSslMode,
@@ -42,6 +42,7 @@ use crate::decode::json_decode;
 use crate::Error;
 use crate::Result;
 use crate::runtime::sync::Mutex;
+use std::ops::DerefMut;
 
 #[derive(Debug, Clone)]
 pub struct DBPool {
@@ -92,7 +93,7 @@ impl DBPool {
                     .min_connections(opt.min_connections)
                     .idle_timeout(opt.idle_timeout)
                     .test_before_acquire(opt.test_before_acquire);
-                let p = build.connect_with(driver.mysql.clone().unwrap()).await?;
+                let p = build.connect_with(driver.mysql.clone().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?).await?;
                 pool.mysql = Some(p);
                 return Ok(pool);
             }
@@ -106,7 +107,7 @@ impl DBPool {
                     .min_connections(opt.min_connections)
                     .idle_timeout(opt.idle_timeout)
                     .test_before_acquire(opt.test_before_acquire);
-                let p = build.connect_with(driver.postgres.clone().unwrap()).await?;
+                let p = build.connect_with(driver.postgres.clone().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?).await?;
                 pool.postgres = Some(p);
                 return Ok(pool);
             }
@@ -120,7 +121,7 @@ impl DBPool {
                     .min_connections(opt.min_connections)
                     .idle_timeout(opt.idle_timeout)
                     .test_before_acquire(opt.test_before_acquire);
-                let p = build.connect_with(driver.sqlite.clone().unwrap()).await?;
+                let p = build.connect_with(driver.sqlite.clone().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?).await?;
                 pool.sqlite = Some(p);
                 return Ok(pool);
             }
@@ -134,7 +135,7 @@ impl DBPool {
                     .min_connections(opt.min_connections)
                     .idle_timeout(opt.idle_timeout)
                     .test_before_acquire(opt.test_before_acquire);
-                let p = build.connect_with(driver.mssql.clone().unwrap()).await?;
+                let p = build.connect_with(driver.mssql.clone().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?).await?;
                 pool.mssql = Some(p);
                 return Ok(pool);
             }
@@ -222,7 +223,7 @@ impl DBPool {
                 return Ok(DBPoolConn {
                     driver_type: DriverType::Mysql,
                     #[cfg(feature = "mysql")]
-                    mysql: Some(self.mysql.as_ref().unwrap().acquire().await?),
+                    mysql: Some(self.mysql.as_ref().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.acquire().await?),
                     #[cfg(feature = "postgres")]
                     postgres: None,
                     #[cfg(feature = "sqlite")]
@@ -238,7 +239,7 @@ impl DBPool {
                     #[cfg(feature = "mysql")]
                     mysql: None,
                     #[cfg(feature = "postgres")]
-                    postgres: Some(self.postgres.as_ref().unwrap().acquire().await?),
+                    postgres: Some(self.postgres.as_ref().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.acquire().await?),
                     #[cfg(feature = "sqlite")]
                     sqlite: None,
                     #[cfg(feature = "mssql")]
@@ -254,7 +255,7 @@ impl DBPool {
                     #[cfg(feature = "postgres")]
                     postgres: None,
                     #[cfg(feature = "sqlite")]
-                    sqlite: Some(self.sqlite.as_ref().unwrap().acquire().await?),
+                    sqlite: Some(self.sqlite.as_ref().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.acquire().await?),
                     #[cfg(feature = "mssql")]
                     mssql: None,
                 });
@@ -270,7 +271,7 @@ impl DBPool {
                     #[cfg(feature = "sqlite")]
                     sqlite: None,
                     #[cfg(feature = "mssql")]
-                    mssql: Some(self.mssql.as_ref().unwrap().acquire().await?),
+                    mssql: Some(self.mssql.as_ref().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.acquire().await?),
                 });
             }
 
@@ -290,14 +291,14 @@ impl DBPool {
             }
             #[cfg(feature = "mysql")]
             &DriverType::Mysql => {
-                let conn = self.mysql.as_ref().unwrap().try_acquire();
+                let conn = self.mysql.as_ref().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.try_acquire();
                 if conn.is_none() {
                     return Ok(None);
                 }
                 return Ok(Some(DBPoolConn {
                     driver_type: self.driver_type,
                     #[cfg(feature = "mysql")]
-                    mysql: Some(conn.unwrap()),
+                    mysql: Some(conn.ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?),
                     #[cfg(feature = "postgres")]
                     postgres: None,
                     #[cfg(feature = "sqlite")]
@@ -308,7 +309,7 @@ impl DBPool {
             }
             #[cfg(feature = "postgres")]
             &DriverType::Postgres => {
-                let conn = self.postgres.as_ref().unwrap().try_acquire();
+                let conn = self.postgres.as_ref().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.try_acquire();
                 if conn.is_none() {
                     return Ok(None);
                 }
@@ -317,7 +318,7 @@ impl DBPool {
                     #[cfg(feature = "mysql")]
                     mysql: None,
                     #[cfg(feature = "postgres")]
-                    postgres: Some(conn.unwrap()),
+                    postgres: Some(conn.ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?),
                     #[cfg(feature = "sqlite")]
                     sqlite: None,
                     #[cfg(feature = "mssql")]
@@ -326,7 +327,7 @@ impl DBPool {
             }
             #[cfg(feature = "sqlite")]
             &DriverType::Sqlite => {
-                let conn = self.sqlite.as_ref().unwrap().try_acquire();
+                let conn = self.sqlite.as_ref().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.try_acquire();
                 if conn.is_none() {
                     return Ok(None);
                 }
@@ -337,14 +338,14 @@ impl DBPool {
                     #[cfg(feature = "postgres")]
                     postgres: None,
                     #[cfg(feature = "sqlite")]
-                    sqlite: Some(conn.unwrap()),
+                    sqlite: Some(conn.ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?),
                     #[cfg(feature = "mssql")]
                     mssql: None,
                 }));
             }
             #[cfg(feature = "mssql")]
             &DriverType::Mssql => {
-                let conn = self.mssql.as_ref().unwrap().try_acquire();
+                let conn = self.mssql.as_ref().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.try_acquire();
                 if conn.is_none() {
                     return Ok(None);
                 }
@@ -357,7 +358,7 @@ impl DBPool {
                     #[cfg(feature = "sqlite")]
                     sqlite: None,
                     #[cfg(feature = "mssql")]
-                    mssql: Some(conn.unwrap()),
+                    mssql: Some(conn.ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?),
                 }));
             }
 
@@ -367,60 +368,12 @@ impl DBPool {
         }
     }
 
-    pub async fn begin(&self) -> crate::Result<DBTx<'_>> {
-        match &self.driver_type {
-            &DriverType::None => {
-                return Err(Error::from("un init DBPool!"));
-            }
-            &DriverType::Mysql => Ok(DBTx {
-                driver_type: self.driver_type,
-                #[cfg(feature = "mysql")]
-                mysql: Some(self.mysql.as_ref().unwrap().begin().await?),
-                #[cfg(feature = "postgres")]
-                postgres: None,
-                #[cfg(feature = "sqlite")]
-                sqlite: None,
-                #[cfg(feature = "mssql")]
-                mssql: None,
-                done: false,
-            }),
-            &DriverType::Postgres => Ok(DBTx {
-                driver_type: self.driver_type,
-                #[cfg(feature = "postgres")]
-                postgres: Some(self.postgres.as_ref().unwrap().begin().await?),
-                #[cfg(feature = "mysql")]
-                mysql: None,
-                #[cfg(feature = "sqlite")]
-                sqlite: None,
-                #[cfg(feature = "mssql")]
-                mssql: None,
-                done: false,
-            }),
-            &DriverType::Sqlite => Ok(DBTx {
-                driver_type: self.driver_type,
-                #[cfg(feature = "sqlite")]
-                sqlite: Some(Mutex::new(self.sqlite.as_ref().unwrap().begin().await?)),
-                #[cfg(feature = "postgres")]
-                postgres: None,
-                #[cfg(feature = "mysql")]
-                mysql: None,
-                #[cfg(feature = "mssql")]
-                mssql: None,
-                done: false,
-            }),
-            &DriverType::Mssql => Ok(DBTx {
-                driver_type: self.driver_type,
-                #[cfg(feature = "mssql")]
-                mssql: Some(self.mssql.as_ref().unwrap().begin().await?),
-                #[cfg(feature = "mysql")]
-                mysql: None,
-                #[cfg(feature = "postgres")]
-                postgres: None,
-                #[cfg(feature = "sqlite")]
-                sqlite: None,
-                done: false,
-            }),
-        }
+    pub async fn begin(&self) -> crate::Result<DBTx> {
+        Ok(DBTx {
+            driver_type: self.driver_type.clone(),
+            conn: Some(self.acquire().await?),
+            done: false,
+        })
     }
 
     pub async fn close(&self) {
@@ -429,13 +382,41 @@ impl DBPool {
                 return;
             }
             #[cfg(feature = "mysql")]
-            &DriverType::Mysql => self.mysql.as_ref().unwrap().close().await,
+            &DriverType::Mysql => {
+                match &self.mysql {
+                    None => {}
+                    Some(pool) => {
+                        pool.close().await;
+                    }
+                }
+            }
             #[cfg(feature = "postgres")]
-            &DriverType::Postgres => self.postgres.as_ref().unwrap().close().await,
+            &DriverType::Postgres => {
+                match &self.postgres {
+                    None => {}
+                    Some(pool) => {
+                        pool.close().await;
+                    }
+                }
+            }
             #[cfg(feature = "sqlite")]
-            &DriverType::Sqlite => self.sqlite.as_ref().unwrap().close().await,
+            &DriverType::Sqlite => {
+                match &self.sqlite {
+                    None => {}
+                    Some(pool) => {
+                        pool.close().await;
+                    }
+                }
+            }
             #[cfg(feature = "mssql")]
-            &DriverType::Mssql => self.mssql.as_ref().unwrap().close().await,
+            &DriverType::Mssql => {
+                match &self.mssql {
+                    None => {}
+                    Some(pool) => {
+                        pool.close().await;
+                    }
+                }
+            }
             _ => {
                 return;
             }
@@ -583,80 +564,6 @@ impl DBConnectOption {
     }
 }
 
-#[derive(Debug)]
-pub struct DBConnection {
-    pub driver_type: DriverType,
-    #[cfg(feature = "mysql")]
-    pub mysql: Option<MySqlConnection>,
-    #[cfg(feature = "postgres")]
-    pub postgres: Option<PgConnection>,
-    #[cfg(feature = "sqlite")]
-    pub sqlite: Option<SqliteConnection>,
-    #[cfg(feature = "mssql")]
-    pub mssql: Option<MssqlConnection>,
-}
-
-impl DBConnection {
-    #[cfg(feature = "mysql")]
-    pub fn new_my(arg: MySqlConnection) -> Self {
-        Self {
-            driver_type: DriverType::Mysql,
-            #[cfg(feature = "mysql")]
-            mysql: Some(arg),
-            #[cfg(feature = "postgres")]
-            postgres: None,
-            #[cfg(feature = "sqlite")]
-            sqlite: None,
-            #[cfg(feature = "mssql")]
-            mssql: None,
-        }
-    }
-
-    #[cfg(feature = "sqlite")]
-    pub fn new_sqlite(arg: SqliteConnection) -> Self {
-        Self {
-            driver_type: DriverType::Sqlite,
-            #[cfg(feature = "mysql")]
-            mysql: None,
-            #[cfg(feature = "postgres")]
-            postgres: None,
-            #[cfg(feature = "sqlite")]
-            sqlite: Some(arg),
-            #[cfg(feature = "mssql")]
-            mssql: None,
-        }
-    }
-
-    #[cfg(feature = "postgres")]
-    pub fn new_pg(arg: PgConnection) -> Self {
-        Self {
-            driver_type: DriverType::Postgres,
-            #[cfg(feature = "mysql")]
-            mysql: None,
-            #[cfg(feature = "postgres")]
-            postgres: Some(arg),
-            #[cfg(feature = "sqlite")]
-            sqlite: None,
-            #[cfg(feature = "mssql")]
-            mssql: None,
-        }
-    }
-
-    #[cfg(feature = "mssql")]
-    pub fn new_mssql(arg: MssqlConnection) -> Self {
-        Self {
-            driver_type: DriverType::Postgres,
-            #[cfg(feature = "mysql")]
-            mysql: None,
-            #[cfg(feature = "postgres")]
-            postgres: None,
-            #[cfg(feature = "sqlite")]
-            sqlite: None,
-            #[cfg(feature = "mssql")]
-            mssql: Some(arg),
-        }
-    }
-}
 
 pub struct DBQuery<'q> {
     pub driver_type: DriverType,
@@ -679,7 +586,7 @@ impl<'q> DBQuery<'q> {
             }
             #[cfg(feature = "mysql")]
             &DriverType::Mysql => {
-                let mut q = self.mysql.take().unwrap();
+                let mut q = self.mysql.take().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?;
                 match t {
                     serde_json::Value::String(s) => {
                         q = q.bind(Some(s.to_owned()));
@@ -689,11 +596,11 @@ impl<'q> DBQuery<'q> {
                     }
                     serde_json::Value::Number(n) => {
                         if n.is_f64() {
-                            q = q.bind(n.as_f64().unwrap());
+                            q = q.bind(n.as_f64().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?);
                         } else if n.is_u64() {
-                            q = q.bind(n.as_u64().unwrap());
+                            q = q.bind(n.as_u64().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?);
                         } else if n.is_i64() {
-                            q = q.bind(n.as_i64().unwrap());
+                            q = q.bind(n.as_i64().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?);
                         }
                     }
                     serde_json::Value::Bool(b) => {
@@ -707,7 +614,7 @@ impl<'q> DBQuery<'q> {
             }
             #[cfg(feature = "postgres")]
             &DriverType::Postgres => {
-                let mut q = self.postgres.take().unwrap();
+                let mut q = self.postgres.take().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?;
                 match t {
                     serde_json::Value::String(s) => {
                         q = q.bind(Some(s.to_owned()));
@@ -717,11 +624,11 @@ impl<'q> DBQuery<'q> {
                     }
                     serde_json::Value::Number(n) => {
                         if n.is_f64() {
-                            q = q.bind(n.as_f64().unwrap());
+                            q = q.bind(n.as_f64().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?);
                         } else if n.is_i64() {
-                            q = q.bind(n.as_i64().unwrap());
+                            q = q.bind(n.as_i64().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?);
                         } else if n.is_u64() {
-                            q = q.bind(n.as_i64().unwrap());
+                            q = q.bind(n.as_i64().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?);
                         }
                     }
                     serde_json::Value::Bool(b) => {
@@ -735,7 +642,7 @@ impl<'q> DBQuery<'q> {
             }
             #[cfg(feature = "sqlite")]
             &DriverType::Sqlite => {
-                let mut q = self.sqlite.take().unwrap();
+                let mut q = self.sqlite.take().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?;
                 match t {
                     serde_json::Value::String(s) => {
                         q = q.bind(Some(s.to_owned()));
@@ -745,11 +652,11 @@ impl<'q> DBQuery<'q> {
                     }
                     serde_json::Value::Number(n) => {
                         if n.is_f64() {
-                            q = q.bind(n.as_f64().unwrap());
+                            q = q.bind(n.as_f64().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?);
                         } else if n.is_i64() {
-                            q = q.bind(n.as_i64().unwrap());
+                            q = q.bind(n.as_i64().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?);
                         } else if n.is_u64() {
-                            q = q.bind(n.as_i64().unwrap());
+                            q = q.bind(n.as_i64().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?);
                         }
                     }
                     serde_json::Value::Bool(b) => {
@@ -763,7 +670,7 @@ impl<'q> DBQuery<'q> {
             }
             #[cfg(feature = "mssql")]
             &DriverType::Mssql => {
-                let mut q = self.mssql.take().unwrap();
+                let mut q = self.mssql.take().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?;
                 match t {
                     serde_json::Value::String(s) => {
                         q = q.bind(Some(s.to_owned()));
@@ -773,11 +680,11 @@ impl<'q> DBQuery<'q> {
                     }
                     serde_json::Value::Number(n) => {
                         if n.is_f64() {
-                            q = q.bind(n.as_f64().unwrap());
+                            q = q.bind(n.as_f64().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?);
                         } else if n.is_i64() {
-                            q = q.bind(n.as_i64().unwrap());
+                            q = q.bind(n.as_i64().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?);
                         } else if n.is_u64() {
-                            q = q.bind(n.as_i64().unwrap());
+                            q = q.bind(n.as_i64().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?);
                         }
                     }
                     serde_json::Value::Bool(b) => {
@@ -860,8 +767,8 @@ impl DBPoolConn {
             #[cfg(feature = "mysql")]
             &DriverType::Mysql => {
                 let async_stream: Vec<MySqlRow> =
-                    self.mysql.as_mut().unwrap().fetch_all(sql).await?;
-                let json_array = async_stream.try_to_json()?.as_array().unwrap().to_owned();
+                    self.mysql.as_mut().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.fetch_all(sql).await?;
+                let json_array = async_stream.try_to_json()?.as_array().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.to_owned();
                 let return_len = json_array.len();
                 let result = json_decode::<T>(json_array)?;
                 Ok((result, return_len))
@@ -869,16 +776,16 @@ impl DBPoolConn {
             #[cfg(feature = "postgres")]
             &DriverType::Postgres => {
                 let async_stream: Vec<PgRow> =
-                    self.postgres.as_mut().unwrap().fetch_all(sql).await?;
-                let json_array = async_stream.try_to_json()?.as_array().unwrap().to_owned();
+                    self.postgres.as_mut().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.fetch_all(sql).await?;
+                let json_array = async_stream.try_to_json()?.as_array().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.to_owned();
                 let return_len = json_array.len();
                 let result = json_decode::<T>(json_array)?;
                 Ok((result, return_len))
             }
             #[cfg(feature = "sqlite")]
             &DriverType::Sqlite => {
-                let data: Vec<SqliteRow> = self.sqlite.as_mut().unwrap().fetch_all(sql).await?;
-                let json_array = data.try_to_json()?.as_array().unwrap().to_owned();
+                let data: Vec<SqliteRow> = self.sqlite.as_mut().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.fetch_all(sql).await?;
+                let json_array = data.try_to_json()?.as_array().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.to_owned();
                 let return_len = json_array.len();
                 let result = json_decode::<T>(json_array)?;
                 Ok((result, return_len))
@@ -886,8 +793,8 @@ impl DBPoolConn {
             #[cfg(feature = "mssql")]
             &DriverType::Mssql => {
                 let async_stream: Vec<MssqlRow> =
-                    self.mssql.as_mut().unwrap().fetch_all(sql).await?;
-                let json_array = async_stream.try_to_json()?.as_array().unwrap().to_owned();
+                    self.mssql.as_mut().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.fetch_all(sql).await?;
+                let json_array = async_stream.try_to_json()?.as_array().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.to_owned();
                 let return_len = json_array.len();
                 let result = json_decode::<T>(json_array)?;
                 Ok((result, return_len))
@@ -906,22 +813,22 @@ impl DBPoolConn {
             }
             #[cfg(feature = "mysql")]
             &DriverType::Mysql => {
-                let data: MySqlQueryResult = self.mysql.as_mut().unwrap().execute(sql).await?;
+                let data: MySqlQueryResult = self.mysql.as_mut().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.execute(sql).await?;
                 return Ok(DBExecResult::from(data));
             }
             #[cfg(feature = "postgres")]
             &DriverType::Postgres => {
-                let data: PgQueryResult = self.postgres.as_mut().unwrap().execute(sql).await?;
+                let data: PgQueryResult = self.postgres.as_mut().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.execute(sql).await?;
                 return Ok(DBExecResult::from(data));
             }
             #[cfg(feature = "sqlite")]
             &DriverType::Sqlite => {
-                let data: SqliteQueryResult = self.sqlite.as_mut().unwrap().execute(sql).await?;
+                let data: SqliteQueryResult = self.sqlite.as_mut().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.execute(sql).await?;
                 return Ok(DBExecResult::from(data));
             }
             #[cfg(feature = "mssql")]
             &DriverType::Mssql => {
-                let data: MssqlQueryResult = self.mssql.as_mut().unwrap().execute(sql).await?;
+                let data: MssqlQueryResult = self.mssql.as_mut().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.execute(sql).await?;
                 return Ok(DBExecResult::from(data));
             }
             _ => {
@@ -944,10 +851,10 @@ impl DBPoolConn {
                 let data: Vec<MySqlRow> = self
                     .mysql
                     .as_mut()
-                    .unwrap()
-                    .fetch_all(sql.mysql.unwrap())
+                    .ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?
+                    .fetch_all(sql.mysql.ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?)
                     .await?;
-                let json_array = data.try_to_json()?.as_array().unwrap().to_owned();
+                let json_array = data.try_to_json()?.as_array().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.to_owned();
                 let return_len = json_array.len();
                 let result = json_decode::<T>(json_array)?;
                 Ok((result, return_len))
@@ -957,10 +864,10 @@ impl DBPoolConn {
                 let data: Vec<PgRow> = self
                     .postgres
                     .as_mut()
-                    .unwrap()
-                    .fetch_all(sql.postgres.unwrap())
+                    .ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?
+                    .fetch_all(sql.postgres.ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?)
                     .await?;
-                let json_array = data.try_to_json()?.as_array().unwrap().to_owned();
+                let json_array = data.try_to_json()?.as_array().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.to_owned();
                 let return_len = json_array.len();
                 let result = json_decode::<T>(json_array)?;
                 Ok((result, return_len))
@@ -970,10 +877,10 @@ impl DBPoolConn {
                 let data: Vec<SqliteRow> = self
                     .sqlite
                     .as_mut()
-                    .unwrap()
-                    .fetch_all(sql.sqlite.unwrap())
+                    .ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?
+                    .fetch_all(sql.sqlite.ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?)
                     .await?;
-                let json_array = data.try_to_json()?.as_array().unwrap().to_owned();
+                let json_array = data.try_to_json()?.as_array().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.to_owned();
                 let return_len = json_array.len();
                 let result = json_decode::<T>(json_array)?;
                 Ok((result, return_len))
@@ -983,10 +890,10 @@ impl DBPoolConn {
                 let data: Vec<MssqlRow> = self
                     .mssql
                     .as_mut()
-                    .unwrap()
-                    .fetch_all(sql.mssql.unwrap())
+                    .ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?
+                    .fetch_all(sql.mssql.ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?)
                     .await?;
-                let json_array = data.try_to_json()?.as_array().unwrap().to_owned();
+                let json_array = data.try_to_json()?.as_array().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.to_owned();
                 let return_len = json_array.len();
                 let result = json_decode::<T>(json_array)?;
                 Ok((result, return_len))
@@ -1008,8 +915,8 @@ impl DBPoolConn {
                 let result: MySqlQueryResult = self
                     .mysql
                     .as_mut()
-                    .unwrap()
-                    .execute(sql.mysql.unwrap())
+                    .ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?
+                    .execute(sql.mysql.ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?)
                     .await?;
                 return Ok(DBExecResult::from(result));
             }
@@ -1018,8 +925,8 @@ impl DBPoolConn {
                 let data: PgQueryResult = self
                     .postgres
                     .as_mut()
-                    .unwrap()
-                    .execute(sql.postgres.unwrap())
+                    .ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?
+                    .execute(sql.postgres.ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?)
                     .await?;
                 return Ok(DBExecResult::from(data));
             }
@@ -1028,8 +935,8 @@ impl DBPoolConn {
                 let data: SqliteQueryResult = self
                     .sqlite
                     .as_mut()
-                    .unwrap()
-                    .execute(sql.sqlite.unwrap())
+                    .ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?
+                    .execute(sql.sqlite.ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?)
                     .await?;
                 return Ok(DBExecResult::from(data));
             }
@@ -1038,8 +945,8 @@ impl DBPoolConn {
                 let data: MssqlQueryResult = self
                     .mssql
                     .as_mut()
-                    .unwrap()
-                    .execute(sql.mssql.unwrap())
+                    .ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?
+                    .execute(sql.mssql.ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?)
                     .await?;
                 return Ok(DBExecResult::from(data));
             }
@@ -1049,61 +956,13 @@ impl DBPoolConn {
         }
     }
 
-    pub async fn begin(&mut self) -> crate::Result<DBTx<'_>> {
+    pub async fn begin(mut self) -> crate::Result<DBTx> {
         self.check_alive()?;
-        match &self.driver_type {
-            &DriverType::None => {
-                return Err(Error::from("un init DBPool!"));
-            }
-            &DriverType::Mysql => Ok(DBTx {
-                driver_type: self.driver_type,
-                #[cfg(feature = "mysql")]
-                mysql: Some(self.mysql.as_mut().unwrap().begin().await?),
-                #[cfg(feature = "postgres")]
-                postgres: None,
-                #[cfg(feature = "sqlite")]
-                sqlite: None,
-                #[cfg(feature = "mssql")]
-                mssql: None,
-                done: false
-            }),
-            &DriverType::Postgres => Ok(DBTx {
-                driver_type: self.driver_type,
-                #[cfg(feature = "postgres")]
-                postgres: Some(self.postgres.as_mut().unwrap().begin().await?),
-                #[cfg(feature = "mysql")]
-                mysql: None,
-                #[cfg(feature = "sqlite")]
-                sqlite: None,
-                #[cfg(feature = "mssql")]
-                mssql: None,
-                done: false
-            }),
-            &DriverType::Sqlite => Ok(DBTx {
-                driver_type: self.driver_type,
-                #[cfg(feature = "sqlite")]
-                sqlite: Some(Mutex::new(self.sqlite.as_mut().unwrap().begin().await?)),
-                #[cfg(feature = "postgres")]
-                postgres: None,
-                #[cfg(feature = "mysql")]
-                mysql: None,
-                #[cfg(feature = "mssql")]
-                mssql: None,
-                done: false
-            }),
-            &DriverType::Mssql => Ok(DBTx {
-                driver_type: self.driver_type,
-                #[cfg(feature = "mssql")]
-                mssql: Some(self.mssql.as_mut().unwrap().begin().await?),
-                #[cfg(feature = "mysql")]
-                mysql: None,
-                #[cfg(feature = "sqlite")]
-                sqlite: None,
-                #[cfg(feature = "postgres")]
-                postgres: None,
-                done: false
-            }),
-        }
+        return Ok(DBTx {
+            driver_type: self.driver_type.clone(),
+            conn: Some(self),
+            done: false,
+        });
     }
 
     pub async fn ping(&mut self) -> crate::Result<()> {
@@ -1114,19 +973,19 @@ impl DBPoolConn {
             }
             #[cfg(feature = "mysql")]
             &DriverType::Mysql => {
-                return Ok(self.mysql.as_mut().unwrap().ping().await?);
+                return Ok(self.mysql.as_mut().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.ping().await?);
             }
             #[cfg(feature = "postgres")]
             &DriverType::Postgres => {
-                return Ok(self.postgres.as_mut().unwrap().ping().await?);
+                return Ok(self.postgres.as_mut().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.ping().await?);
             }
             #[cfg(feature = "sqlite")]
             &DriverType::Sqlite => {
-                return Ok(self.sqlite.as_mut().unwrap().ping().await?);
+                return Ok(self.sqlite.as_mut().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.ping().await?);
             }
             #[cfg(feature = "mssql")]
             &DriverType::Mssql => {
-                return Ok(self.mssql.as_mut().unwrap().ping().await?);
+                return Ok(self.mssql.as_mut().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?.ping().await?);
             }
             _ => {
                 return Err(Error::from("[rbatis] feature not enable!"));
@@ -1167,321 +1026,56 @@ impl DBPoolConn {
 }
 
 #[derive(Debug)]
-pub struct DBTx<'a> {
+pub struct DBTx {
     pub driver_type: DriverType,
-    #[cfg(feature = "mysql")]
-    pub mysql: Option<Transaction<'a, MySql>>,
-    #[cfg(feature = "postgres")]
-    pub postgres: Option<Transaction<'a, Postgres>>,
-    #[cfg(feature = "sqlite")]
-    pub sqlite: Option<Mutex<Transaction<'a, Sqlite>>>,
-    #[cfg(feature = "mssql")]
-    pub mssql: Option<Transaction<'a, Mssql>>,
-
+    pub conn: Option<DBPoolConn>,
     /// is tx done?
     pub done: bool,
 }
 
-impl DBTx<'_> {
-
+impl DBTx {
     pub fn is_done(&self) -> bool {
         self.done
     }
 
-    pub async fn commit(mut self) -> crate::Result<()> {
-        match &self.driver_type {
-            &DriverType::None => {
-                return Err(Error::from("un init DBPool!"));
-            }
-            #[cfg(feature = "mysql")]
-            &DriverType::Mysql => {
-                self.mysql.take().unwrap().commit().await.into_result()?;
-                self.done = true;
-                return Ok(());
-            }
-            #[cfg(feature = "postgres")]
-            &DriverType::Postgres => {
-                self.postgres.take().unwrap().commit().await.into_result()?;
-                self.done = true;
-                return Ok(());
-            },
-            #[cfg(feature = "sqlite")]
-            &DriverType::Sqlite => {
-                self
-                    .sqlite
-                    .take()
-                    .unwrap()
-                    .into_inner()
-                    .commit()
-                    .await
-                    .into_result()?;
-                self.done = true;
-                return Ok(());
-            },
-            #[cfg(feature = "mssql")]
-            &DriverType::Mssql => {
-                self.mssql.take().unwrap().commit().await.into_result()?;
-                self.done = true;
-                return Ok(());
-            },
-            _ => {
-                return Err(Error::from("[rbatis] feature not enable!"));
-            }
-        }
+    pub async fn commit(&mut self) -> crate::Result<()> {
+        let conn = self.conn.as_mut().ok_or_else(|| Error::from("[rbatis-core] DBTx conn is none!"))?;
+        conn.execute("BEGIN").await?;
+        self.done = true;
+        return Ok(());
     }
 
-    pub async fn rollback(mut self) -> crate::Result<()> {
-        match &self.driver_type {
-            &DriverType::None => {
-                return Err(Error::from("un init DBPool!"));
-            }
-            #[cfg(feature = "mysql")]
-            &DriverType::Mysql => {
-                self.mysql.take().unwrap().rollback().await.into_result()?;
-                self.done = true;
-                return Ok(());
-            },
-            #[cfg(feature = "postgres")]
-            &DriverType::Postgres => {
-                self.postgres.take().unwrap().rollback().await.into_result()?;
-                self.done = true;
-                return Ok(());
-            },
-            #[cfg(feature = "sqlite")]
-            &DriverType::Sqlite => {
-                self
-                    .sqlite
-                    .take()
-                    .unwrap()
-                    .into_inner()
-                    .rollback()
-                    .await
-                    .into_result()?;
-                self.done = true;
-                return Ok(());
-            },
-            #[cfg(feature = "mssql")]
-            &DriverType::Mssql => {
-                self.mssql.take().unwrap().rollback().await.into_result()?;
-                self.done = true;
-                return Ok(());
-            },
-            _ => {
-                return Err(Error::from("[rbatis] feature not enable!"));
-            }
-        }
+    pub async fn rollback(&mut self) -> crate::Result<()> {
+        let conn = self.conn.as_mut().ok_or_else(|| Error::from("[rbatis-core] DBTx conn is none!"))?;
+        conn.execute("ROLLBACK").await?;
+        self.done = true;
+        return Ok(());
     }
 
     pub async fn fetch<'q, T>(&mut self, sql: &'q str) -> crate::Result<(T, usize)>
         where
             T: DeserializeOwned,
     {
-        match &self.driver_type {
-            &DriverType::None => {
-                return Err(Error::from("un init DBPool!"));
-            }
-            #[cfg(feature = "mysql")]
-            &DriverType::Mysql => {
-                let data: Vec<MySqlRow> = self.mysql.as_mut().unwrap().fetch_all(sql).await?;
-                let json_array = data.try_to_json()?.as_array().unwrap().to_owned();
-                let return_len = json_array.len();
-                let result = json_decode::<T>(json_array)?;
-                Ok((result, return_len))
-            }
-            #[cfg(feature = "postgres")]
-            &DriverType::Postgres => {
-                let data: Vec<PgRow> = self.postgres.as_mut().unwrap().fetch_all(sql).await?;
-                let json_array = data.try_to_json()?.as_array().unwrap().to_owned();
-                let return_len = json_array.len();
-                let result = json_decode::<T>(json_array)?;
-                Ok((result, return_len))
-            }
-            #[cfg(feature = "sqlite")]
-            &DriverType::Sqlite => {
-                let data: Vec<SqliteRow> = self
-                    .sqlite
-                    .as_mut()
-                    .unwrap()
-                    .lock()
-                    .await
-                    .fetch_all(sql)
-                    .await?;
-                let json_array = data.try_to_json()?.as_array().unwrap().to_owned();
-                let return_len = json_array.len();
-                let result = json_decode::<T>(json_array)?;
-                Ok((result, return_len))
-            }
-            #[cfg(feature = "mssql")]
-            &DriverType::Mssql => {
-                let data: Vec<MssqlRow> = self.mssql.as_mut().unwrap().fetch_all(sql).await?;
-                let json_array = data.try_to_json()?.as_array().unwrap().to_owned();
-                let return_len = json_array.len();
-                let result = json_decode::<T>(json_array)?;
-                Ok((result, return_len))
-            } /**/
-            _ => {
-                return Err(Error::from("[rbatis] feature not enable!"));
-            }
-        }
+        let conn = self.conn.as_mut().ok_or_else(|| Error::from("[rbatis-core] DBTx conn is none!"))?;
+        return conn.fetch(sql).await;
     }
 
     pub async fn fetch_parperd<'q, T>(&mut self, sql: DBQuery<'q>) -> crate::Result<(T, usize)>
         where
             T: DeserializeOwned,
     {
-        match &self.driver_type {
-            &DriverType::None => {
-                return Err(Error::from("un init DBPool!"));
-            }
-            #[cfg(feature = "mysql")]
-            &DriverType::Mysql => {
-                let data: Vec<MySqlRow> = self
-                    .mysql
-                    .as_mut()
-                    .unwrap()
-                    .fetch_all(sql.mysql.unwrap())
-                    .await?;
-                let json_array = data.try_to_json()?.as_array().unwrap().to_owned();
-                let return_len = json_array.len();
-                let result = json_decode::<T>(json_array)?;
-                Ok((result, return_len))
-            }
-            #[cfg(feature = "postgres")]
-            &DriverType::Postgres => {
-                let data: Vec<PgRow> = self
-                    .postgres
-                    .as_mut()
-                    .unwrap()
-                    .fetch_all(sql.postgres.unwrap())
-                    .await?;
-                let json_array = data.try_to_json()?.as_array().unwrap().to_owned();
-                let return_len = json_array.len();
-                let result = json_decode::<T>(json_array)?;
-                Ok((result, return_len))
-            }
-            #[cfg(feature = "sqlite")]
-            &DriverType::Sqlite => {
-                let data: Vec<SqliteRow> = self
-                    .sqlite
-                    .as_mut()
-                    .unwrap()
-                    .lock()
-                    .await
-                    .fetch_all(sql.sqlite.unwrap())
-                    .await?;
-                let json_array = data.try_to_json()?.as_array().unwrap().to_owned();
-                let return_len = json_array.len();
-                let result = json_decode::<T>(json_array)?;
-                Ok((result, return_len))
-            }
-            #[cfg(feature = "mssql")]
-            &DriverType::Mssql => {
-                let data: Vec<MssqlRow> = self
-                    .mssql
-                    .as_mut()
-                    .unwrap()
-                    .fetch_all(sql.mssql.unwrap())
-                    .await?;
-                let json_array = data.try_to_json()?.as_array().unwrap().to_owned();
-                let return_len = json_array.len();
-                let result = json_decode::<T>(json_array)?;
-                Ok((result, return_len))
-            }
-            _ => {
-                return Err(Error::from("[rbatis] feature not enable!"));
-            }
-        }
+        let conn = self.conn.as_mut().ok_or_else(|| Error::from("[rbatis-core] DBTx conn is none!"))?;
+        return conn.fetch_parperd(sql).await;
     }
 
     pub async fn execute(&mut self, sql: &str) -> crate::Result<DBExecResult> {
-        match &self.driver_type {
-            &DriverType::None => {
-                return Err(Error::from("un init DBPool!"));
-            }
-            #[cfg(feature = "mysql")]
-            &DriverType::Mysql => {
-                let data: MySqlQueryResult = self.mysql.as_mut().unwrap().execute(sql).await?;
-                return Ok(DBExecResult::from(data));
-            }
-            #[cfg(feature = "postgres")]
-            &DriverType::Postgres => {
-                let data: PgQueryResult = self.postgres.as_mut().unwrap().execute(sql).await?;
-                return Ok(DBExecResult::from(data));
-            }
-            #[cfg(feature = "sqlite")]
-            &DriverType::Sqlite => {
-                let data: SqliteQueryResult = self
-                    .sqlite
-                    .as_mut()
-                    .unwrap()
-                    .lock()
-                    .await
-                    .execute(sql)
-                    .await?;
-                return Ok(DBExecResult::from(data));
-            }
-            #[cfg(feature = "mssql")]
-            &DriverType::Mssql => {
-                let data: MssqlQueryResult = self.mssql.as_mut().unwrap().execute(sql).await?;
-                return Ok(DBExecResult::from(data));
-            }
-            _ => {
-                return Err(Error::from("[rbatis] feature not enable!"));
-            }
-        }
+        let conn = self.conn.as_mut().ok_or_else(|| Error::from("[rbatis-core] DBTx conn is none!"))?;
+        return conn.execute(sql).await;
     }
 
     pub async fn exec_prepare(&mut self, sql: DBQuery<'_>) -> crate::Result<DBExecResult> {
-        match &self.driver_type {
-            &DriverType::None => {
-                return Err(Error::from("un init DBPool!"));
-            }
-            #[cfg(feature = "mysql")]
-            &DriverType::Mysql => {
-                let data: MySqlQueryResult = self
-                    .mysql
-                    .as_mut()
-                    .unwrap()
-                    .execute(sql.mysql.unwrap())
-                    .await?;
-                return Ok(DBExecResult::from(data));
-            }
-            #[cfg(feature = "postgres")]
-            &DriverType::Postgres => {
-                let data: PgQueryResult = self
-                    .postgres
-                    .as_mut()
-                    .unwrap()
-                    .execute(sql.postgres.unwrap())
-                    .await?;
-                return Ok(DBExecResult::from(data));
-            }
-            #[cfg(feature = "sqlite")]
-            &DriverType::Sqlite => {
-                let data: SqliteQueryResult = self
-                    .sqlite
-                    .as_mut()
-                    .unwrap()
-                    .lock()
-                    .await
-                    .execute(sql.sqlite.unwrap())
-                    .await?;
-                return Ok(DBExecResult::from(data));
-            }
-            #[cfg(feature = "mssql")]
-            &DriverType::Mssql => {
-                let data: MssqlQueryResult = self
-                    .mssql
-                    .as_mut()
-                    .unwrap()
-                    .execute(sql.mssql.unwrap())
-                    .await?;
-                return Ok(DBExecResult::from(data));
-            }
-            _ => {
-                return Err(Error::from("[rbatis] feature not enable!"));
-            }
-        }
+        let conn = self.conn.as_mut().ok_or_else(|| Error::from("[rbatis-core] DBTx conn is none!"))?;
+        return conn.exec_prepare(sql).await;
     }
 }
 

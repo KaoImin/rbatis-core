@@ -19,7 +19,8 @@ async fn main() -> Result<(), Error> {
 #[cfg(test)]
 mod test {
     use rbatis_core::convert::StmtConvert;
-    use rbatis_core::db::DriverType;
+    use rbatis_core::db::{DriverType, DBPool};
+    use rbatis_core::Error;
 
     #[test]
     pub fn test_convert() {
@@ -36,5 +37,18 @@ mod test {
         bench!(100000,{
             DriverType::Postgres.stmt_convert(1,&mut s);
         });
+    }
+
+    #[tokio::test]
+    async fn test_tx() -> Result<(), Error> {
+        //Automatic judgment of database type or  postgres://postgres:123456@localhost:5432/postgres
+        let pool = DBPool::new("mysql://root:123456@localhost:3306/test").await?;
+        let mut tx = pool.begin().await?;
+        let data = tx
+            .execute("UPDATE `test`.`biz_activity` SET `name` = 'test2' WHERE (`id` = '222');")
+            .await.unwrap();
+        println!("count: {:?}", data);
+        tx.commit().await.unwrap();
+        return Ok(());
     }
 }
