@@ -1042,7 +1042,7 @@ impl DBTx {
         self.done
     }
 
-    pub fn take(mut self) -> Option<DBPoolConn> {
+    pub fn take_conn(mut self) -> Option<DBPoolConn> {
         self.conn
     }
 
