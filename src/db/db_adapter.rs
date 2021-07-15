@@ -1206,14 +1206,18 @@ impl DBTx<'_> {
                 return Ok(());
             },
             #[cfg(feature = "sqlite")]
-            &DriverType::Sqlite => self
-                .sqlite
-                .take()
-                .unwrap()
-                .into_inner()
-                .commit()
-                .await
-                .into_result(),
+            &DriverType::Sqlite => {
+                self
+                    .sqlite
+                    .take()
+                    .unwrap()
+                    .into_inner()
+                    .commit()
+                    .await
+                    .into_result()?;
+                self.done = true;
+                return Ok(());
+            },
             #[cfg(feature = "mssql")]
             &DriverType::Mssql => {
                 self.mssql.take().unwrap().commit().await.into_result()?;
@@ -1244,14 +1248,18 @@ impl DBTx<'_> {
                 return Ok(());
             },
             #[cfg(feature = "sqlite")]
-            &DriverType::Sqlite => self
-                .sqlite
-                .take()
-                .unwrap()
-                .into_inner()
-                .rollback()
-                .await
-                .into_result(),
+            &DriverType::Sqlite => {
+                self
+                    .sqlite
+                    .take()
+                    .unwrap()
+                    .into_inner()
+                    .rollback()
+                    .await
+                    .into_result()?;
+                self.done = true;
+                return Ok(());
+            },
             #[cfg(feature = "mssql")]
             &DriverType::Mssql => {
                 self.mssql.take().unwrap().rollback().await.into_result()?;
