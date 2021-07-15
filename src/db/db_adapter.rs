@@ -598,11 +598,11 @@ impl<'q> DBQuery<'q> {
                     }
                     serde_json::Value::Number(n) => {
                         if n.is_f64() {
-                            q = q.bind(n.as_f64().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?);
+                            q = q.bind(n.as_f64().unwrap_or_default());
                         } else if n.is_u64() {
-                            q = q.bind(n.as_u64().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?);
+                            q = q.bind(n.as_u64().unwrap_or_default());
                         } else if n.is_i64() {
-                            q = q.bind(n.as_i64().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?);
+                            q = q.bind(n.as_i64().unwrap_or_default());
                         }
                     }
                     serde_json::Value::Bool(b) => {
@@ -626,11 +626,11 @@ impl<'q> DBQuery<'q> {
                     }
                     serde_json::Value::Number(n) => {
                         if n.is_f64() {
-                            q = q.bind(n.as_f64().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?);
-                        } else if n.is_i64() {
-                            q = q.bind(n.as_i64().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?);
+                            q = q.bind(n.as_f64().unwrap_or_default());
                         } else if n.is_u64() {
-                            q = q.bind(n.as_i64().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?);
+                            q = q.bind(n.as_i64().unwrap_or_default());
+                        } else if n.is_i64() {
+                            q = q.bind(n.as_i64().unwrap_or_default());
                         }
                     }
                     serde_json::Value::Bool(b) => {
@@ -654,11 +654,11 @@ impl<'q> DBQuery<'q> {
                     }
                     serde_json::Value::Number(n) => {
                         if n.is_f64() {
-                            q = q.bind(n.as_f64().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?);
-                        } else if n.is_i64() {
-                            q = q.bind(n.as_i64().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?);
+                            q = q.bind(n.as_f64().unwrap_or_default());
                         } else if n.is_u64() {
-                            q = q.bind(n.as_i64().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?);
+                            q = q.bind(n.as_i64().unwrap_or_default());
+                        } else if n.is_i64() {
+                            q = q.bind(n.as_i64().unwrap_or_default());
                         }
                     }
                     serde_json::Value::Bool(b) => {
@@ -682,11 +682,11 @@ impl<'q> DBQuery<'q> {
                     }
                     serde_json::Value::Number(n) => {
                         if n.is_f64() {
-                            q = q.bind(n.as_f64().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?);
-                        } else if n.is_i64() {
-                            q = q.bind(n.as_i64().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?);
+                            q = q.bind(n.as_f64().unwrap_or_default());
                         } else if n.is_u64() {
-                            q = q.bind(n.as_i64().ok_or_else(|| Error::from("[rbatis-core]  conn is none!"))?);
+                            q = q.bind(n.as_i64().unwrap_or_default());
+                        } else if n.is_i64() {
+                            q = q.bind(n.as_i64().unwrap_or_default());
                         }
                     }
                     serde_json::Value::Bool(b) => {
