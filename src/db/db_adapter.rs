@@ -369,11 +369,13 @@ impl DBPool {
     }
 
     pub async fn begin(&self) -> crate::Result<DBTx> {
-        Ok(DBTx {
+        let mut tx = DBTx {
             driver_type: self.driver_type.clone(),
             conn: Some(self.acquire().await?),
-            done: false,
-        })
+            done: true,
+        };
+        tx.begin().await?;
+        Ok(tx)
     }
 
     pub async fn close(&self) {
@@ -958,11 +960,13 @@ impl DBPoolConn {
 
     pub async fn begin(mut self) -> crate::Result<DBTx> {
         self.check_alive()?;
-        return Ok(DBTx {
+        let mut tx = DBTx {
             driver_type: self.driver_type.clone(),
             conn: Some(self),
-            done: false,
-        });
+            done: true,
+        };
+        tx.begin().await;
+        return Ok(tx);
     }
 
     pub async fn ping(&mut self) -> crate::Result<()> {
@@ -1038,9 +1042,19 @@ impl DBTx {
         self.done
     }
 
-    pub async fn commit(&mut self) -> crate::Result<()> {
+    pub async fn begin(&mut self) -> crate::Result<()> {
+        if !self.done {
+            return Ok(());
+        }
         let conn = self.conn.as_mut().ok_or_else(|| Error::from("[rbatis-core] DBTx conn is none!"))?;
         conn.execute("BEGIN").await?;
+        self.done = false;
+        return Ok(());
+    }
+
+    pub async fn commit(&mut self) -> crate::Result<()> {
+        let conn = self.conn.as_mut().ok_or_else(|| Error::from("[rbatis-core] DBTx conn is none!"))?;
+        conn.execute("COMMIT").await?;
         self.done = true;
         return Ok(());
     }
