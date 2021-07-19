@@ -79,19 +79,19 @@ impl<'r> JsonCodec for sqlx_core::mysql::MySqlValueRef<'r> {
             }
 
             "DATE" => {
-                let r: Option<chrono::NaiveDate> = Decode::<'_, MySql>::decode(self)?;
+                let r: Option<String> = Decode::<'_, MySql>::decode(self)?;
                 return Ok(json!(r));
             }
             "TIME" | "YEAR" => {
-                let r: Option<chrono::NaiveTime> = Decode::<'_, MySql>::decode(self)?;
+                let r: Option<String> = Decode::<'_, MySql>::decode(self)?;
                 return Ok(json!(r));
             }
             "DATETIME" => {
-                let r: Option<chrono::NaiveDateTime> = Decode::<'_, MySql>::decode(self)?;
+                let r: Option<String> = Decode::<'_, MySql>::decode(self)?;
                 return Ok(json!(r));
             }
             "TIMESTAMP" => {
-                let r: Option<chrono::NaiveDateTime> = Decode::<'_, MySql>::decode(self)?;
+                let r: Option<String> = Decode::<'_, MySql>::decode(self)?;
                 return Ok(json!(r));
             }
             "JSON" => {
