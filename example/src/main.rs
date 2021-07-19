@@ -7,10 +7,15 @@ pub mod bencher;
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     //Automatic judgment of database type or  postgres://postgres:123456@localhost:5432/postgres
-    let pool = DBPool::new("mysql://root:123456@localhost:3306/test").await?;
+    let pool = DBPool::new("postgres://postgres:123456@localhost:5432/postgres?stringtype=unspecified").await?;
     let mut conn = pool.acquire().await?;
+
+    let mut q =pool.make_query(r#"insert into "public"."p" (id,po) values (1,$1);"#).unwrap();
+    q.bind_value(&serde_json::json!("2021-07-19 11:04:47"));
+    conn.exec_prepare(q).await.unwrap();
+
     let data: (serde_json::Value, usize) = conn
-        .fetch("SELECT * FROM biz_activity;")
+        .fetch("SELECT * FROM p")
         .await.unwrap();
     println!("count: {:?}", data);
     return Ok(());
@@ -25,7 +30,8 @@ mod test {
     #[test]
     pub fn test_convert() {
         let mut s = String::new();
-        DriverType::Postgres.stmt_convert(1000, &mut s);
+        DriverType::Postgres.
+            stmt_convert(1000, &mut s);
         println!("stmt:{}", s);
     }
 
