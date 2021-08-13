@@ -608,6 +608,22 @@ impl<'q> DBQuery<'q> {
                     serde_json::Value::Bool(b) => {
                         q = q.bind(Option::Some(b.to_owned()));
                     }
+                    serde_json::Value::Array(a) => {
+                        if a.is_empty() {
+                            q = q.bind(Option::Some(t.to_string()))
+                        } else {
+                            if a[0].is_number() {
+                                let val = serde_json::from_value::<Vec<u8>>(t.to_owned());
+                                if val.is_err() {
+                                    q = q.bind(Option::Some(t.to_string()))
+                                } else {
+                                    q = q.bind(val.unwrap())
+                                }
+                            } else {
+                                q = q.bind(Option::Some(t.to_string()))
+                            }
+                        }
+                    }
                     _ => {
                         q = q.bind(Some(t.to_string()));
                     }
@@ -636,6 +652,23 @@ impl<'q> DBQuery<'q> {
                     serde_json::Value::Bool(b) => {
                         q = q.bind(Option::Some(b.to_owned()));
                     }
+                    serde_json::Value::Array(a) => {
+                        if a.is_empty() {
+                            q = q.bind(Option::Some(t.to_string()))
+                        } else {
+                            if a[0].is_number() {
+                                let val = serde_json::from_value::<Vec<u8>>(t.to_owned());
+                                if val.is_err() {
+                                    let val = serde_json::from_value::<Vec<i64>>(t.to_owned()).unwrap();
+                                    q = q.bind(val)
+                                } else {
+                                    q = q.bind(val.unwrap())
+                                }
+                            } else {
+                                q = q.bind(Option::Some(t.to_string()))
+                            }
+                        }
+                    }
                     _ => {
                         q = q.bind(Some(t.to_string()));
                     }
@@ -663,6 +696,22 @@ impl<'q> DBQuery<'q> {
                     }
                     serde_json::Value::Bool(b) => {
                         q = q.bind(Option::Some(b.to_owned()));
+                    }
+                    serde_json::Value::Array(a) => {
+                        if a.is_empty() {
+                            q = q.bind(Option::Some(t.to_string()))
+                        } else {
+                            if a[0].is_number() {
+                                let val = serde_json::from_value::<Vec<u8>>(t.to_owned());
+                                if val.is_err() {
+                                    q = q.bind(Option::Some(t.to_string()))
+                                } else {
+                                    q = q.bind(val.unwrap())
+                                }
+                            } else {
+                                q = q.bind(Option::Some(t.to_string()))
+                            }
+                        }
                     }
                     _ => {
                         q = q.bind(Some(t.to_string()));
