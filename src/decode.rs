@@ -8,8 +8,8 @@ use crate::Error;
 /// serde_json::Value,BigDecimal, i8..i64,u8..u64,serde_json::Number,bool,String
 /// or object used serde_json macro object
 pub fn json_decode<T: ?Sized>(datas: Vec<serde_json::Value>) -> Result<T, crate::Error>
-    where
-        T: DeserializeOwned,
+where
+    T: DeserializeOwned,
 {
     let mut js = serde_json::Value::Null;
     let type_name = std::any::type_name::<T>();
@@ -127,7 +127,7 @@ mod test {
         "b":2
         }
         )])
-            .unwrap();
+        .unwrap();
         println!("{:#?}", m);
     }
 
@@ -139,7 +139,7 @@ mod test {
         "b":2
         }
         )])
-            .unwrap();
+        .unwrap();
         println!("{:#?}", m);
     }
 

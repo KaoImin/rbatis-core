@@ -9,7 +9,7 @@ use sqlx_core::type_info::TypeInfo;
 use sqlx_core::value::ValueRef;
 
 use crate::convert::{JsonCodec, RefJsonCodec, ResultCodec};
-use crate::{new_json_option_into};
+use crate::new_json_option_into;
 
 impl<'c> JsonCodec for SqliteValueRef<'c> {
     fn try_to_json(self) -> crate::Result<serde_json::Value> {

@@ -11,8 +11,7 @@ use sqlx_core::value::ValueRef;
 use crate::convert::{JsonCodec, RefJsonCodec, ResultCodec};
 use chrono::{DateTime, Utc};
 
-use crate::{new_json_option_into};
-
+use crate::new_json_option_into;
 
 impl<'r> JsonCodec for sqlx_core::mysql::MySqlValueRef<'r> {
     fn try_to_json(self) -> crate::Result<serde_json::Value> {

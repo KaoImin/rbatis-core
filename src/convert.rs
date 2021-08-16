@@ -10,33 +10,32 @@ pub trait StmtConvert {
 
 #[macro_export]
 macro_rules! push_index {
-     ($n:expr,$new_sql:ident,$index:expr) => {
-                  {
-                     let mut num=$index/$n;
-                     $new_sql.push((num+48) as u8 as char);
-                     $index % $n
-                  }
-              };
+    ($n:expr,$new_sql:ident,$index:expr) => {{
+        let mut num = $index / $n;
+        $new_sql.push((num + 48) as u8 as char);
+        $index % $n
+    }};
     ($index:ident,$new_sql:ident) => {
-                if  $index>=0 && $index<10{
-                    $new_sql.push(($index+48)as u8 as char);
-                }else if $index>=10 && $index<100 {
-                    let $index = push_index!(10,$new_sql,$index);
-                    let $index = push_index!(1,$new_sql,$index);
-                }else if $index>=100 && $index<1000{
-                    let $index = push_index!(100,$new_sql,$index);
-                    let $index = push_index!(10,$new_sql,$index);
-                    let $index = push_index!(1,$new_sql,$index);
-                }else if $index>=1000 && $index<10000{
-                    let $index = push_index!(1000,$new_sql,$index);
-                    let $index = push_index!(100,$new_sql,$index);
-                    let $index = push_index!(10,$new_sql,$index);
-                    let $index = push_index!(1,$new_sql,$index);
-                }else{
-                     use std::fmt::Write;
-                     $new_sql.write_fmt(format_args!("{}", $index))
-                    .expect("a Display implementation returned an error unexpectedly");
-               }
+        if $index >= 0 && $index < 10 {
+            $new_sql.push(($index + 48) as u8 as char);
+        } else if $index >= 10 && $index < 100 {
+            let $index = push_index!(10, $new_sql, $index);
+            let $index = push_index!(1, $new_sql, $index);
+        } else if $index >= 100 && $index < 1000 {
+            let $index = push_index!(100, $new_sql, $index);
+            let $index = push_index!(10, $new_sql, $index);
+            let $index = push_index!(1, $new_sql, $index);
+        } else if $index >= 1000 && $index < 10000 {
+            let $index = push_index!(1000, $new_sql, $index);
+            let $index = push_index!(100, $new_sql, $index);
+            let $index = push_index!(10, $new_sql, $index);
+            let $index = push_index!(1, $new_sql, $index);
+        } else {
+            use std::fmt::Write;
+            $new_sql
+                .write_fmt(format_args!("{}", $index))
+                .expect("a Display implementation returned an error unexpectedly");
+        }
     };
 }
 
@@ -46,7 +45,7 @@ impl StmtConvert for DriverType {
             DriverType::Postgres => {
                 item.push('$');
                 let index = index + 1;
-                push_index!(index,item);
+                push_index!(index, item);
             }
             DriverType::Mysql => {
                 item.push('?');
@@ -58,7 +57,7 @@ impl StmtConvert for DriverType {
                 item.push('@');
                 item.push('p');
                 let index = index + 1;
-                push_index!(index,item);
+                push_index!(index, item);
             }
             DriverType::None => {
                 panic!("[rbatis] un support none for driver type!")
@@ -86,14 +85,11 @@ pub trait ResultCodec<T> {
 
 #[macro_export]
 macro_rules! new_json_option_into {
-    ($r:ident) => {
-               {
-                    if $r.is_some() {
-                         $r.unwrap().into()
-                    } else {
-                        serde_json::Value::Null
-                    }
-                }
-    };
+    ($r:ident) => {{
+        if $r.is_some() {
+            $r.unwrap().into()
+        } else {
+            serde_json::Value::Null
+        }
+    }};
 }
-

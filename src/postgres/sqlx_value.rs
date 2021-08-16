@@ -17,7 +17,7 @@ use crate::convert::{JsonCodec, RefJsonCodec, ResultCodec};
 use crate::postgres::PgInterval;
 use chrono::Utc;
 
-use crate::{new_json_option_into};
+use crate::new_json_option_into;
 
 impl<'c> JsonCodec for PgValueRef<'c> {
     fn try_to_json(self) -> crate::Result<serde_json::Value> {

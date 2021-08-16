@@ -4,11 +4,9 @@ use chrono::NaiveDateTime;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
-pub use db_adapter::{
-    DBConnectOption, DBExecResult, DBPool, DBPoolConn, DBQuery, DBTx,
-};
-use py_sql::StringConvert;
 use crate::convert::StmtConvert;
+pub use db_adapter::{DBConnectOption, DBExecResult, DBPool, DBPoolConn, DBQuery, DBTx};
+use py_sql::StringConvert;
 
 pub mod db_adapter;
 
@@ -70,4 +68,3 @@ impl DriverType {
         }
     }
 }
-
