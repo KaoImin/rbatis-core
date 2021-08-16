@@ -4,6 +4,7 @@
 use std::str::FromStr;
 use std::time::Duration;
 
+use bson::{Bson, Document};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use sqlx_core::acquire::Acquire;
@@ -643,7 +644,7 @@ pub struct DBQuery<'q> {
 }
 
 impl<'q> DBQuery<'q> {
-    pub fn bind_value(&mut self, t: &serde_json::Value) -> crate::Result<()> {
+    pub fn bind_value(&mut self, t: &Bson) -> crate::Result<()> {
         match &self.driver_type {
             &DriverType::None => {
                 return Err(Error::from("un init DBPool!"));
@@ -655,23 +656,26 @@ impl<'q> DBQuery<'q> {
                     .take()
                     .ok_or_else(|| Error::from("[rbatis-core] conn is none!"))?;
                 match t {
-                    serde_json::Value::String(s) => {
+                    Bson::String(s) => {
                         q = q.bind(Some(s.to_owned()));
                     }
-                    serde_json::Value::Null => {
+                    Bson::Null => {
                         q = q.bind(Option::<i32>::None);
                     }
-                    serde_json::Value::Number(n) => {
-                        if n.is_f64() {
-                            q = q.bind(n.as_f64().unwrap_or_default());
-                        } else if n.is_u64() {
-                            q = q.bind(n.as_u64().unwrap_or_default());
-                        } else if n.is_i64() {
-                            q = q.bind(n.as_i64().unwrap_or_default());
-                        }
+                    Bson::Int32(n) => {
+                        q = q.bind(*n);
                     }
-                    serde_json::Value::Bool(b) => {
-                        q = q.bind(Option::Some(b.to_owned()));
+                    Bson::Int64(n) => {
+                        q = q.bind(*n);
+                    }
+                    Bson::Double(n) => {
+                        q = q.bind(*n);
+                    }
+                    Bson::Boolean(b) => {
+                        q = q.bind(Some(b.to_owned()));
+                    }
+                    Bson::Binary(bin) => {
+                        q = q.bind(Some(bin.bytes.clone()));
                     }
                     _ => {
                         q = q.bind(Some(t.to_string()));
@@ -686,23 +690,26 @@ impl<'q> DBQuery<'q> {
                     .take()
                     .ok_or_else(|| Error::from("[rbatis-core] conn is none!"))?;
                 match t {
-                    serde_json::Value::String(s) => {
+                    Bson::String(s) => {
                         q = q.bind(Some(s.to_owned()));
                     }
-                    serde_json::Value::Null => {
+                    Bson::Null => {
                         q = q.bind(Option::<i32>::None);
                     }
-                    serde_json::Value::Number(n) => {
-                        if n.is_f64() {
-                            q = q.bind(n.as_f64().unwrap_or_default());
-                        } else if n.is_u64() {
-                            q = q.bind(n.as_i64().unwrap_or_default());
-                        } else if n.is_i64() {
-                            q = q.bind(n.as_i64().unwrap_or_default());
-                        }
+                    Bson::Int32(n) => {
+                        q = q.bind(*n);
                     }
-                    serde_json::Value::Bool(b) => {
-                        q = q.bind(Option::Some(b.to_owned()));
+                    Bson::Int64(n) => {
+                        q = q.bind(*n);
+                    }
+                    Bson::Double(n) => {
+                        q = q.bind(*n);
+                    }
+                    Bson::Boolean(b) => {
+                        q = q.bind(Some(b.to_owned()));
+                    }
+                    Bson::Binary(bin) => {
+                        q = q.bind(Some(bin.bytes.clone()));
                     }
                     _ => {
                         q = q.bind(Some(t.to_string()));
@@ -717,23 +724,26 @@ impl<'q> DBQuery<'q> {
                     .take()
                     .ok_or_else(|| Error::from("[rbatis-core] conn is none!"))?;
                 match t {
-                    serde_json::Value::String(s) => {
+                    Bson::String(s) => {
                         q = q.bind(Some(s.to_owned()));
                     }
-                    serde_json::Value::Null => {
+                    Bson::Null => {
                         q = q.bind(Option::<i32>::None);
                     }
-                    serde_json::Value::Number(n) => {
-                        if n.is_f64() {
-                            q = q.bind(n.as_f64().unwrap_or_default());
-                        } else if n.is_u64() {
-                            q = q.bind(n.as_i64().unwrap_or_default());
-                        } else if n.is_i64() {
-                            q = q.bind(n.as_i64().unwrap_or_default());
-                        }
+                    Bson::Int32(n) => {
+                        q = q.bind(*n);
                     }
-                    serde_json::Value::Bool(b) => {
-                        q = q.bind(Option::Some(b.to_owned()));
+                    Bson::Int64(n) => {
+                        q = q.bind(*n);
+                    }
+                    Bson::Double(n) => {
+                        q = q.bind(*n);
+                    }
+                    Bson::Boolean(b) => {
+                        q = q.bind(Some(b.to_owned()));
+                    }
+                    Bson::Binary(bin) => {
+                        q = q.bind(Some(bin.bytes.clone()));
                     }
                     _ => {
                         q = q.bind(Some(t.to_string()));
@@ -748,23 +758,23 @@ impl<'q> DBQuery<'q> {
                     .take()
                     .ok_or_else(|| Error::from("[rbatis-core] conn is none!"))?;
                 match t {
-                    serde_json::Value::String(s) => {
+                    Bson::String(s) => {
                         q = q.bind(Some(s.to_owned()));
                     }
-                    serde_json::Value::Null => {
+                    Bson::Null => {
                         q = q.bind(Option::<i32>::None);
                     }
-                    serde_json::Value::Number(n) => {
-                        if n.is_f64() {
-                            q = q.bind(n.as_f64().unwrap_or_default());
-                        } else if n.is_u64() {
-                            q = q.bind(n.as_i64().unwrap_or_default());
-                        } else if n.is_i64() {
-                            q = q.bind(n.as_i64().unwrap_or_default());
-                        }
+                    Bson::Int32(n) => {
+                        q = q.bind(*n);
                     }
-                    serde_json::Value::Bool(b) => {
-                        q = q.bind(Option::Some(b.to_owned()));
+                    Bson::Int64(n) => {
+                        q = q.bind(*n);
+                    }
+                    Bson::Double(n) => {
+                        q = q.bind(*n);
+                    }
+                    Bson::Boolean(b) => {
+                        q = q.bind(Some(b.to_owned()));
                     }
                     _ => {
                         q = q.bind(Some(t.to_string()));
