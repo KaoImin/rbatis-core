@@ -32,7 +32,7 @@ tokio1 = ["async-std/tokio1"]
 async-io = ["async-std/async-global-executor"]
 
 [dependencies]
-bson = "1.2.3"
+bson ={ version = "1.2", features = ["u2i"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["raw_value"] }
 chrono = { version = "0.4", default-features = false, features = ["clock", "serde"] }
