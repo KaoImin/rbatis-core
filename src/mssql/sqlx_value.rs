@@ -1,3 +1,4 @@
+use bson::{to_bson, Array, Bson, Document};
 use serde_json::{json, Value};
 use sqlx_core::column::Column;
 use sqlx_core::decode::Decode;
@@ -8,45 +9,56 @@ use sqlx_core::type_info::TypeInfo;
 use sqlx_core::types::BigDecimal;
 use sqlx_core::value::ValueRef;
 
-use crate::convert::{JsonCodec, RefJsonCodec, ResultCodec};
+use crate::convert::{BsonCodec, RefBsonCodec, ResultCodec};
+use crate::new_bson_option_into;
 
-use crate::new_json_option_into;
-
-impl<'r> JsonCodec for sqlx_core::mssql::MssqlValueRef<'r> {
-    fn try_to_json(self) -> crate::Result<serde_json::Value> {
+impl<'r> BsonCodec for sqlx_core::mssql::MssqlValueRef<'r> {
+    fn try_to_bson(self) -> crate::Result<Bson> {
         //TODO batter way to match type replace use string match
         match self.type_info().name() {
             "NULL" => {
-                return Ok(serde_json::Value::Null);
+                return Ok(Bson::Null);
             }
             "TINYINT" => {
                 let r: Option<i8> = Decode::<'_, Mssql>::decode(self)?;
-                return Ok(new_json_option_into!(r));
+                let ret = if let Some(i) = r {
+                    Bson::Int32(i as i32)
+                } else {
+                    Bson::Null
+                };
+
+                return Ok(ret);
             }
             "SMALLINT" => {
                 let r: Option<i16> = Decode::<'_, Mssql>::decode(self)?;
-                return Ok(new_json_option_into!(r));
+                let ret = if let Some(i) = r {
+                    Bson::Int32(i as i32)
+                } else {
+                    Bson::Null
+                };
+
+                return Ok(ret);
             }
             "INT" => {
                 let r: Option<i32> = Decode::<'_, Mssql>::decode(self)?;
-                return Ok(new_json_option_into!(r));
+                return Ok(new_bson_option_into!(r));
             }
             "BIGINT" => {
                 let r: Option<i64> = Decode::<'_, Mssql>::decode(self)?;
-                return Ok(new_json_option_into!(r));
+                return Ok(new_bson_option_into!(r));
             }
             "REAL" => {
                 let r: Option<f32> = Decode::<'_, Mssql>::decode(self)?;
-                return Ok(new_json_option_into!(r));
+                return Ok(new_bson_option_into!(r));
             }
             "FLOAT" => {
                 let r: Option<f64> = Decode::<'_, Mssql>::decode(self)?;
-                return Ok(new_json_option_into!(r));
+                return Ok(new_bson_option_into!(r));
             }
 
             "VARCHAR" | "NVARCHAR" | "BIGVARCHAR" | "CHAR" | "BIGCHAR" | "NCHAR" => {
                 let r: Option<String> = Decode::<'_, Mssql>::decode(self)?;
-                return Ok(new_json_option_into!(r));
+                return Ok(new_bson_option_into!(r));
             }
 
             //TODO  "DATE" | "TIME" | "DATETIME" | "TIMESTAMP" => {
@@ -70,19 +82,19 @@ impl<'r> JsonCodec for sqlx_core::mssql::MssqlValueRef<'r> {
     }
 }
 
-impl RefJsonCodec for Vec<MssqlRow> {
-    fn try_to_json(&self) -> crate::Result<serde_json::Value> {
+impl RefBsonCodec for Vec<MssqlRow> {
+    fn try_to_bson(&self) -> crate::Result<Array> {
         let mut arr = Vec::with_capacity(self.len());
         for row in self {
-            let mut m = serde_json::Map::new();
+            let mut d = Document::new();
             let columns = row.columns();
             for x in columns {
                 let key = x.name();
                 let v: MssqlValueRef = row.try_get_raw(key)?;
-                m.insert(key.to_owned(), v.try_to_json()?);
+                d.insert(key.to_owned(), v.try_to_bson()?);
             }
-            arr.push(serde_json::Value::Object(m));
+            arr.push(Bson::Document(d));
         }
-        Ok(serde_json::Value::from(arr))
+        Ok(arr)
     }
 }

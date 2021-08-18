@@ -38,9 +38,9 @@ use sqlx_core::sqlite::{
 use sqlx_core::transaction::Transaction;
 use sqlx_core::types::Type;
 
-use crate::convert::{RefJsonCodec, ResultCodec};
+use crate::convert::{RefBsonCodec, ResultCodec};
 use crate::db::{DBPoolOptions, DriverType};
-use crate::decode::json_decode;
+use crate::decode::bson_decode;
 use crate::runtime::sync::Mutex;
 use crate::Error;
 use crate::Result;
@@ -858,13 +858,9 @@ impl DBPoolConn {
                     .ok_or_else(|| Error::from("[rbatis-core] conn is none!"))?
                     .fetch_all(sql)
                     .await?;
-                let json_array = async_stream
-                    .try_to_json()?
-                    .as_array()
-                    .ok_or_else(|| Error::from("[rbatis-core] try_to_json is not array!"))?
-                    .to_owned();
-                let return_len = json_array.len();
-                let result = json_decode::<T>(json_array)?;
+                let bson_array = async_stream.try_to_bson()?.to_owned();
+                let return_len = bson_array.len();
+                let result = bson_decode::<T>(bson_array)?;
                 Ok((result, return_len))
             }
             #[cfg(feature = "postgres")]
@@ -875,13 +871,9 @@ impl DBPoolConn {
                     .ok_or_else(|| Error::from("[rbatis-core] conn is none!"))?
                     .fetch_all(sql)
                     .await?;
-                let json_array = async_stream
-                    .try_to_json()?
-                    .as_array()
-                    .ok_or_else(|| Error::from("[rbatis-core] try_to_json is not array!"))?
-                    .to_owned();
-                let return_len = json_array.len();
-                let result = json_decode::<T>(json_array)?;
+                let bson_array = async_stream.try_to_bson()?.to_owned();
+                let return_len = bson_array.len();
+                let result = bson_decode::<T>(bson_array)?;
                 Ok((result, return_len))
             }
             #[cfg(feature = "sqlite")]
@@ -892,13 +884,9 @@ impl DBPoolConn {
                     .ok_or_else(|| Error::from("[rbatis-core] conn is none!"))?
                     .fetch_all(sql)
                     .await?;
-                let json_array = data
-                    .try_to_json()?
-                    .as_array()
-                    .ok_or_else(|| Error::from("[rbatis-core] try_to_json is not array!"))?
-                    .to_owned();
-                let return_len = json_array.len();
-                let result = json_decode::<T>(json_array)?;
+                let bson_array = data.try_to_bson()?.to_owned();
+                let return_len = bson_array.len();
+                let result = bson_decode::<T>(bson_array)?;
                 Ok((result, return_len))
             }
             #[cfg(feature = "mssql")]
@@ -909,13 +897,9 @@ impl DBPoolConn {
                     .ok_or_else(|| Error::from("[rbatis-core] conn is none!"))?
                     .fetch_all(sql)
                     .await?;
-                let json_array = async_stream
-                    .try_to_json()?
-                    .as_array()
-                    .ok_or_else(|| Error::from("[rbatis-core] try_to_json is not array!"))?
-                    .to_owned();
-                let return_len = json_array.len();
-                let result = json_decode::<T>(json_array)?;
+                let bson_array = async_stream.try_to_bson()?.to_owned();
+                let return_len = bson_array.len();
+                let result = bson_decode::<T>(bson_array)?;
                 Ok((result, return_len))
             }
             _ => {
@@ -996,13 +980,9 @@ impl DBPoolConn {
                             .ok_or_else(|| Error::from("[rbatis-core] conn is none!"))?,
                     )
                     .await?;
-                let json_array = data
-                    .try_to_json()?
-                    .as_array()
-                    .ok_or_else(|| Error::from("[rbatis-core] try_to_json is not array!"))?
-                    .to_owned();
-                let return_len = json_array.len();
-                let result = json_decode::<T>(json_array)?;
+                let bson_array = data.try_to_bson()?.to_owned();
+                let return_len = bson_array.len();
+                let result = bson_decode::<T>(bson_array)?;
                 Ok((result, return_len))
             }
             #[cfg(feature = "postgres")]
@@ -1016,13 +996,9 @@ impl DBPoolConn {
                             .ok_or_else(|| Error::from("[rbatis-core] conn is none!"))?,
                     )
                     .await?;
-                let json_array = data
-                    .try_to_json()?
-                    .as_array()
-                    .ok_or_else(|| Error::from("[rbatis-core] try_to_json is not array!"))?
-                    .to_owned();
-                let return_len = json_array.len();
-                let result = json_decode::<T>(json_array)?;
+                let bson_array = data.try_to_bson()?.to_owned();
+                let return_len = bson_array.len();
+                let result = bson_decode::<T>(bson_array)?;
                 Ok((result, return_len))
             }
             #[cfg(feature = "sqlite")]
@@ -1036,13 +1012,9 @@ impl DBPoolConn {
                             .ok_or_else(|| Error::from("[rbatis-core] conn is none!"))?,
                     )
                     .await?;
-                let json_array = data
-                    .try_to_json()?
-                    .as_array()
-                    .ok_or_else(|| Error::from("[rbatis-core] try_to_json is not array!"))?
-                    .to_owned();
-                let return_len = json_array.len();
-                let result = json_decode::<T>(json_array)?;
+                let bson_array = data.try_to_bson()?.to_owned();
+                let return_len = bson_array.len();
+                let result = bson_decode::<T>(bson_array)?;
                 Ok((result, return_len))
             }
             #[cfg(feature = "mssql")]
@@ -1056,13 +1028,9 @@ impl DBPoolConn {
                             .ok_or_else(|| Error::from("[rbatis-core] conn is none!"))?,
                     )
                     .await?;
-                let json_array = data
-                    .try_to_json()?
-                    .as_array()
-                    .ok_or_else(|| Error::from("[rbatis-core] try_to_json is not array!"))?
-                    .to_owned();
-                let return_len = json_array.len();
-                let result = json_decode::<T>(json_array)?;
+                let bson_array = data.try_to_bson()?.to_owned();
+                let return_len = bson_array.len();
+                let result = bson_decode::<T>(bson_array)?;
                 Ok((result, return_len))
             }
             _ => {

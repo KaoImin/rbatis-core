@@ -1,7 +1,7 @@
-use serde_json::Value;
-
 use crate::db::DriverType;
 use crate::Result;
+
+use bson::{Array, Bson, Document};
 
 ///the stmt replace str convert
 pub trait StmtConvert {
@@ -67,15 +67,15 @@ impl StmtConvert for DriverType {
 }
 
 ///json convert
-pub trait JsonCodec {
+pub trait BsonCodec {
     /// to an json value
-    fn try_to_json(self) -> Result<Value>;
+    fn try_to_bson(self) -> Result<Bson>;
 }
 
 ///json convert
-pub trait RefJsonCodec {
+pub trait RefBsonCodec {
     /// to an json value
-    fn try_to_json(&self) -> Result<Value>;
+    fn try_to_bson(&self) -> Result<Array>;
 }
 
 ///result convert
@@ -84,12 +84,24 @@ pub trait ResultCodec<T> {
 }
 
 #[macro_export]
-macro_rules! new_json_option_into {
-    ($r:ident) => {{
-        if $r.is_some() {
-            $r.unwrap().into()
+macro_rules! new_bson_option_into {
+    ($r: expr) => {{
+        if let Some(r) = $r {
+            r.into()
         } else {
-            serde_json::Value::Null
+            Bson::Null
+        }
+    }};
+
+    ($r: expr, $st: expr) => {{
+        if let Some(b) = $r {
+            let bin = bson::Binary {
+                subtype: $st,
+                bytes: b,
+            };
+            Bson::Binary(bin)
+        } else {
+            Bson::Null
         }
     }};
 }

@@ -1,4 +1,5 @@
 //! Types and traits for decoding values from the database.
+use bson::{Array, Bson, Document};
 use serde::de::DeserializeOwned;
 
 use crate::Error;
@@ -7,15 +8,15 @@ use crate::Error;
 /// support decode types:
 /// serde_json::Value,BigDecimal, i8..i64,u8..u64,serde_json::Number,bool,String
 /// or object used serde_json macro object
-pub fn json_decode<T: ?Sized>(datas: Vec<serde_json::Value>) -> Result<T, crate::Error>
+pub fn bson_decode<T: ?Sized>(datas: Array) -> Result<T, crate::Error>
 where
     T: DeserializeOwned,
 {
-    let mut js = serde_json::Value::Null;
+    let mut bson = Bson::Null;
     let type_name = std::any::type_name::<T>();
     if is_array(type_name) {
         //decode array
-        js = serde_json::Value::Array(datas);
+        bson = Bson::Array(datas);
     } else {
         match type_name {
             //decode single type option
@@ -40,14 +41,14 @@ where
                 }
                 for item in datas {
                     match item {
-                        serde_json::Value::Object(arg) => {
-                            for (_, r) in arg {
+                        Bson::Document(doc) => {
+                            for (_, r) in doc {
                                 match type_name {
                                     "alloc::string::String" | "bigdecimal::BigDecimal" => {
-                                        js = serde_json::Value::String(r.to_string());
+                                        bson = Bson::String(r.to_string());
                                     }
                                     _ => {
-                                        js = r;
+                                        bson = r;
                                     }
                                 }
                                 break;
@@ -58,10 +59,10 @@ where
                     break;
                 }
             }
-            "serde_json::value::Value" => {
-                //decode json
-                js = serde_json::Value::Array(datas)
-            }
+            // "serde_json::value::Value" => {
+            //     //decode json
+            //     bson = Bson::Array(datas)
+            // }
             _ => {
                 //decode struct
                 if datas.len() > 1 {
@@ -69,7 +70,7 @@ where
                 }
                 //decode single object
                 for x in datas {
-                    js = x;
+                    bson = x;
                     break;
                 }
             }
@@ -78,9 +79,9 @@ where
 
     //debug_mode feature print json_decode json data
     #[cfg(feature = "debug_mode")]
-    println!("[rbatis] [debug_mode] => {:#}", js);
+    println!("[rbatis] [debug_mode] => {:#}", bson);
 
-    let decode_result = serde_json::from_value(js);
+    let decode_result = bson::from_bson(bson);
     if decode_result.is_ok() {
         return Result::Ok(decode_result.unwrap());
     } else {
@@ -117,11 +118,11 @@ mod test {
 
     use serde_json::json;
 
-    use crate::decode::{is_array, json_decode};
+    use crate::decode::{bson_decode, is_array};
 
     #[test]
     fn test_decode_hashmap() {
-        let m: HashMap<String, serde_json::Value> = json_decode(vec![json!(
+        let m: HashMap<String, serde_json::Value> = bson_decode(vec![json!(
         {
         "a":"1",
         "b":2
@@ -133,7 +134,7 @@ mod test {
 
     #[test]
     fn test_decode_btree_map() {
-        let m: BTreeMap<String, serde_json::Value> = json_decode(vec![json!(
+        let m: BTreeMap<String, serde_json::Value> = bson_decode(vec![json!(
         {
         "a":"1",
         "b":2
