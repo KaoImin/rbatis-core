@@ -445,6 +445,7 @@ impl DBPool {
         let mut tx = DBTx {
             driver_type: self.driver_type.clone(),
             conn: Some(self.acquire().await?),
+            savepoint: 0,
             done: true,
         };
         tx.begin().await?;
@@ -1108,9 +1109,10 @@ impl DBPoolConn {
         let mut tx = DBTx {
             driver_type: self.driver_type.clone(),
             conn: Some(self),
+            savepoint: 0,
             done: true,
         };
-        tx.begin().await;
+        tx.begin().await?;
         return Ok(tx);
     }
 
@@ -1198,6 +1200,7 @@ impl DBPoolConn {
 pub struct DBTx {
     pub driver_type: DriverType,
     pub conn: Option<DBPoolConn>,
+    pub savepoint: u32,
     /// is tx done?
     pub done: bool,
 }
@@ -1221,7 +1224,29 @@ impl DBTx {
             .ok_or_else(|| Error::from("[rbatis-core] DBTx conn is none!"))?;
         conn.exec("BEGIN").await?;
         self.done = false;
-        return Ok(());
+        Ok(())
+    }
+
+    pub async fn savepoint(&mut self) -> crate::Result<()> {
+        let conn = self
+            .conn
+            .as_mut()
+            .ok_or_else(|| Error::from("[rbatis-core] DBTx conn is none!"))?;
+        let savepoint_cmd =
+            String::from("SAVEPOINT savepoint_") + self.savepoint.to_string().as_str();
+        conn.exec(savepoint_cmd.as_str()).await?;
+        Ok(())
+    }
+
+    pub async fn rollback_to_savepoint(&mut self, point: u32) -> crate::Result<()> {
+        let conn = self
+            .conn
+            .as_mut()
+            .ok_or_else(|| Error::from("[rbatis-core] DBTx conn is none!"))?;
+        let rollback_cmd =
+            String::from("ROLLBACK to SAVEPOINT savepoint_") + point.to_string().as_str();
+        conn.exec(rollback_cmd.as_str()).await?;
+        Ok(())
     }
 
     pub async fn commit(&mut self) -> crate::Result<()> {
@@ -1231,7 +1256,7 @@ impl DBTx {
             .ok_or_else(|| Error::from("[rbatis-core] DBTx conn is none!"))?;
         conn.exec("COMMIT").await?;
         self.done = true;
-        return Ok(());
+        Ok(())
     }
 
     pub async fn rollback(&mut self) -> crate::Result<()> {
@@ -1241,7 +1266,7 @@ impl DBTx {
             .ok_or_else(|| Error::from("[rbatis-core] DBTx conn is none!"))?;
         conn.exec("ROLLBACK").await?;
         self.done = true;
-        return Ok(());
+        Ok(())
     }
 
     pub async fn fetch<'q, T>(&mut self, sql: &'q str) -> crate::Result<(T, usize)>
