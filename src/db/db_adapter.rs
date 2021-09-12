@@ -673,10 +673,10 @@ impl<'q> DBQuery<'q> {
                         q = q.bind(*n);
                     }
                     Bson::Boolean(b) => {
-                        q = q.bind(Some(b.to_owned()));
+                        q = q.bind(*b);
                     }
                     Bson::Binary(bin) => {
-                        q = q.bind(Some(bin.bytes.clone()));
+                        q = q.bind(bin.bytes.clone());
                     }
                     _ => {
                         q = q.bind(Some(t.to_string()));
@@ -707,10 +707,10 @@ impl<'q> DBQuery<'q> {
                         q = q.bind(*n);
                     }
                     Bson::Boolean(b) => {
-                        q = q.bind(Some(b.to_owned()));
+                        q = q.bind(*b);
                     }
                     Bson::Binary(bin) => {
-                        q = q.bind(Some(bin.bytes.clone()));
+                        q = q.bind(bin.bytes.clone());
                     }
                     _ => {
                         q = q.bind(Some(t.to_string()));
@@ -741,10 +741,10 @@ impl<'q> DBQuery<'q> {
                         q = q.bind(*n);
                     }
                     Bson::Boolean(b) => {
-                        q = q.bind(Some(b.to_owned()));
+                        q = q.bind(*b);
                     }
                     Bson::Binary(bin) => {
-                        q = q.bind(Some(bin.bytes.clone()));
+                        q = q.bind(bin.bytes.clone());
                     }
                     _ => {
                         q = q.bind(Some(t.to_string()));
@@ -775,7 +775,7 @@ impl<'q> DBQuery<'q> {
                         q = q.bind(*n);
                     }
                     Bson::Boolean(b) => {
-                        q = q.bind(Some(b.to_owned()));
+                        q = q.bind(*b);
                     }
                     _ => {
                         q = q.bind(Some(t.to_string()));
